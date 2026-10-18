@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Protocolos ARQ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Protocolos ARQ</h1>
+    <p class="hint">Clic en una flecha para perder ese mensaje (o para entregarlo si estaba perdido).</p>
+  </header>
+
+  <form id="controls" onsubmit="return false">
+    <div class="row">
+      <label>Protocolo <select name="p"></select></label>
+      <label>k <input name="k" type="number" min="1" max="4"></label>
+      <label>W<sub>s</sub> <input name="w" type="number" min="1" max="16"></label>
+      <label>Mensajes <input name="n" type="number" min="1" max="30"></label>
+      <label>Timeout <input name="to" type="number" min="1" max="60" step="0.5"></label>
+    </div>
+    <div class="row">
+      <label>Propagación <input name="d" type="range" min="0.5" max="6" step="0.5">
+        <output for="d"></output></label>
+      <label>Pérdida aleatoria <input name="r" type="range" min="0" max="50" step="5" value="0">
+        <output for="r" data-unit="%"></output></label>
+    </div>
+    <div class="row buttons">
+      <button type="button" data-act="reset" title="Al principio">⏮</button>
+      <button type="button" data-act="play" title="Reproducir">▶</button>
+      <button type="button" data-act="step" title="Siguiente evento">⏵|</button>
+      <button type="button" data-act="end" title="Al final">⏭</button>
+      <label>Velocidad
+        <select name="speed">
+          <option value="0.5">0,5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+          <option value="4">4×</option>
+        </select>
+      </label>
+      <span class="spacer"></span>
+      <button type="button" data-act="book">Escenario del libro</button>
+      <button type="button" data-act="clear">Quitar pérdidas forzadas</button>
+    </div>
+  </form>
+
+  <section id="state"></section>
+
+  <div id="timeline-wrap">
+    <svg id="timeline" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

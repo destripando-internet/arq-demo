@@ -1,0 +1,157 @@
+:root {
+  --bg: #ffffff;
+  --panel: #f4f4f2;
+  --fg: #1d1d1b;
+  --muted: #6b6b66;
+  --line: #1d1d1b;
+  --ack: #2f5f9e;
+  --pending: #aade87;
+  --window: #f0b400;
+  --start: #71c837;
+  --expire: #ff8080;
+  --bad: #c62828;
+  --playhead: #e05a00;
+  --border: #d6d6d0;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161615;
+    --panel: #22221f;
+    --fg: #e8e8e3;
+    --muted: #9a9a92;
+    --line: #e8e8e3;
+    --ack: #7fb0f0;
+    --pending: #4f7f2f;
+    --window: #e0a800;
+    --start: #5fae2e;
+    --expire: #d85a5a;
+    --bad: #ff7a7a;
+    --playhead: #ff8a3d;
+    --border: #3a3a36;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #161615;
+  --panel: #22221f;
+  --fg: #e8e8e3;
+  --muted: #9a9a92;
+  --line: #e8e8e3;
+  --ack: #7fb0f0;
+  --pending: #4f7f2f;
+  --window: #e0a800;
+  --start: #5fae2e;
+  --expire: #d85a5a;
+  --bad: #ff7a7a;
+  --playhead: #ff8a3d;
+  --border: #3a3a36;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.4 "Open Sans", system-ui, sans-serif;
+}
+
+h1 { margin: 0 0 4px; font-size: 1.5rem; }
+.hint { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
+
+#controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--panel);
+  border-radius: 8px;
+}
+.row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.spacer { flex: 1; }
+label { display: inline-flex; gap: 6px; align-items: center; }
+input[type=number] { width: 4.5em; }
+input, select, button { font: inherit; color: inherit; }
+input[type=number], select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--muted); }
+button {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--fg); }
+
+#state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  margin: 12px 0;
+  align-items: flex-start;
+}
+#state .side { display: flex; gap: 10px; align-items: center; }
+#state h2 { margin: 0; font-size: 1rem; }
+#state p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+#state .warning { flex-basis: 100%; color: var(--bad); }
+.buf { display: flex; gap: 2px; }
+.buf .box {
+  width: 22px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+.buf .box.pending { background: var(--pending); }
+.buf .box.in-window { border: 2px solid var(--window); }
+
+#timeline-wrap {
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+#timeline { display: block; width: 100%; height: auto; }
+
+/* SVG */
+#timeline text { fill: var(--fg); font-size: 15px; }
+#timeline .head { font-weight: 700; font-size: 20px; }
+#timeline .note { font-weight: 700; font-size: 13px; }
+#timeline .note.bad { fill: var(--bad); }
+#timeline .time { fill: var(--playhead); font-size: 12px; }
+#timeline .axis { stroke: var(--line); stroke-width: 1.5; }
+#timeline .playhead { stroke: var(--playhead); stroke-width: 1; stroke-dasharray: 4 4; opacity: 0.7; }
+
+.msg { cursor: pointer; }
+.msg .line { stroke: var(--line); stroke-width: 1.5; }
+.msg.ack .line { stroke: var(--ack); }
+.msg .hit { stroke: transparent; stroke-width: 14; }
+.msg:hover .line { stroke-width: 3; }
+.msg .drop { fill: var(--line); }
+.msg.ack .drop { fill: var(--ack); }
+.ah-data { fill: var(--line); }
+.ah-ack { fill: var(--ack); }
+
+.timer-line { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.clock circle { stroke: var(--line); stroke-width: 1.2; fill: var(--bg); }
+.clock .hand, .clock .slash, .clock .ring { stroke: var(--line); stroke-width: 1.2; fill: none; }
+.clock.start circle { fill: var(--start); }
+.clock.expire circle { fill: var(--expire); }
+
+.box { fill: var(--bg); stroke: var(--line); stroke-width: 1; }
+.box.pending { fill: var(--pending); }
+.box-n { font-size: 12px !important; }
+.window { fill: none; stroke: var(--window); stroke-width: 2.5; }
