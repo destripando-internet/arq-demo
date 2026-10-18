@@ -5,7 +5,7 @@
 //   d<abs>.<attempt>  data message number abs (not modulo), n-th attempt
 //   a<n>              n-th ACK sent by the receiver
 
-import { Engine } from './engine.js';
+import { Engine, instant } from './engine.js';
 import { chance } from './rng.js';
 
 // Order of the events that happen at the same instant: an arrival first (an
@@ -71,6 +71,15 @@ export function simulate(protocol, opts = {}) {
     });
   };
 
+  // Sender state now. New messages already handed to the link that wait for
+  // it to be free have not left yet, so they do not count as sent.
+  const senderNow = () => {
+    const state = sender.state();
+    const waiting = trace.transmissions
+      .filter(d => d.kind === 'data' && !d.rtx && d.tDep > engine.now()).map(d => d.abs);
+    return { ...state, next: Math.min(state.next, ...waiting) };
+  };
+
   // Schedules the arrival of a transmission, unless it is lost.
   const arrive = (tx, onArrival) => {
     if (tx.lost) {
@@ -123,15 +132,18 @@ export function simulate(protocol, opts = {}) {
       const attempt = (attempts.get(abs) ?? 0) + 1;
       attempts.set(abs, attempt);
       const tDep = Math.max(engine.now(), linkFree);
-      linkFree = tDep + p.tTrans;
+      linkFree = instant(tDep + p.tTrans);
       const key = `d${abs}.${attempt}`;
       const tx = {
         key, kind: 'data', seq: abs % M, abs, rtx: attempt > 1,
-        tDep, tArr: tDep + p.tTrans + p.tProp,
+        tDep, tArr: instant(tDep + p.tTrans + p.tProp),
         lost: isLost(key), forced: forced.has(key),
-        sender: sender.state(),  // sender state when sending
+        sender: null,  // sender state when it leaves
       };
       trace.transmissions.push(tx);
+      // Taken when it leaves, after any ACK arriving at that same instant.
+      tx.sender = senderNow();
+      engine.schedule(tDep, () => { tx.sender = senderNow(); }, LINK);
       arrive(tx, () => receiver.onData({ seq: tx.seq, abs }));
       return tDep;
     },
@@ -178,12 +190,15 @@ export function simulate(protocol, opts = {}) {
       const key = `a${ackCount}`;
       const tx = {
         key, kind: 'ack', seq,
-        tDep: engine.now(), tArr: engine.now() + p.tProp,
+        tDep: engine.now(), tArr: instant(engine.now() + p.tProp),
         lost: isLost(key), forced: forced.has(key),
         receiver: receiver.state(),  // receiver state when confirming
       };
       trace.transmissions.push(tx);
-      arrive(tx, () => sender.onAck(seq));
+      arrive(tx, () => {
+        sender.onAck(seq);
+        tx.sender = senderNow();  // sender state once the ACK is processed
+      });
     },
 
     deliver(abs) {

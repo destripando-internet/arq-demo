@@ -33,8 +33,8 @@ const axisBreak = () => icon(76, 30, `<line class="axis" x1="20" y1="0" x2="20" 
   <g class="axis-break" transform="translate(20,15)"><rect x="-9" y="-5" width="18" height="10"/><path d="M-9,-1L9,-6M-9,6L9,1"/></g>
   <text class="gap" x="34" y="19">Δt</text>`);
 
-const sendBuffer = () => icon(84, 24, bufferRow(2, 3, [
-  { seq: 3 }, { seq: 0, state: 'sent' }, { seq: 1, state: 'unsent' }, { seq: 2, state: 'free' }, { seq: 3 },
+const sendBuffer = () => icon(84, 26, bufferRow(2, 6, [
+  { seq: 3, state: 'acked' }, { seq: 0, state: 'sent' }, { seq: 1, state: 'unsent' }, { seq: 2, state: 'free' }, { seq: 3 },
 ], 3));
 const recvBuffer = () => icon(148, 24, bufferRow(2, 3, [
   { seq: 1 }, { seq: 2, state: 'ready' }, { seq: 3, state: 'ready' }, { seq: 4, state: 'free' },

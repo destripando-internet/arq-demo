@@ -9,6 +9,7 @@
   --unsent: #aade87;   /* send buffer: not sent yet */
   --ready: #aade87;    /* receive buffer: ready for the process */
   --held: #d2bff5;     /* receive buffer: held behind a gap */
+  --acked: #d4e3f7;    /* send buffer: confirmed since the previous row */
   --window: #f0b400;
   --start: #71c837;
   --expire: #ff8080;
@@ -35,6 +36,7 @@
     --unsent: #4f7f2f;
     --ready: #4f7f2f;
     --held: #6c519f;
+    --acked: #2c4466;
     --window: #e0a800;
     --start: #5fae2e;
     --expire: #d85a5a;
@@ -61,6 +63,7 @@
   --unsent: #4f7f2f;
   --ready: #4f7f2f;
   --held: #6c519f;
+  --acked: #2c4466;
   --window: #e0a800;
   --start: #5fae2e;
   --expire: #d85a5a;
@@ -185,6 +188,7 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 #timeline .head { font-weight: 700; font-size: 20px; }
 #timeline .note { font-weight: 700; font-size: 13px; }
 #timeline .note.bad { fill: var(--bad); }
+#timeline .ack-label { fill: var(--ack); }
 #timeline .time { fill: var(--playhead); font-size: 12px; }
 #timeline .axis { stroke: var(--line); stroke-width: 1.5; }
 #timeline .playhead { stroke: var(--playhead); stroke-width: 1; stroke-dasharray: 4 4; opacity: 0.7; }
@@ -217,6 +221,8 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .box.unsent { fill: var(--unsent); }
 .box.ready { fill: var(--ready); }
 .box.held { fill: var(--held); }
+.box.acked { fill: var(--acked); }
+.tick { fill: none; stroke: var(--ack); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .box-n { font-size: 12px !important; }
 .window { fill: none; stroke: var(--window); stroke-width: 2.5; }
 

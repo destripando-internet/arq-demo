@@ -59,7 +59,16 @@ Inkscape:
   starting at `base − 1`, the window framed in orange. In the window: sent
   and not confirmed (light red), not sent yet (green), free slot (no colour).
   These colours differ from the book's figures (green for sent and not
-  confirmed).
+  confirmed). Messages confirmed by the ACKs that arrived since the previous
+  row are light blue with a small ✓; when they have already left the row
+  (a cumulative ACK confirming several), the row grows to the left to show
+  them, keeping the window in the same column.
+- When an ACK arrives, confirms something and no message leaves at that
+  instant, a buffer row without label is drawn at the height of its
+  arrival (as the last row of the book's go-back-n figure). It is left out
+  if it would be closer than 30 px to the previous or the next data row;
+  then the next row shows what it confirmed. In a continuous flow (Ws ≥
+  1 + 2a) the next message leaves a moment later, so its row is enough.
 - Receive buffer (selective repeat): right of each `ack N`. First the
   messages this arrival made deliverable, ready for the process (green);
   then the receive window, framed: received but held behind a gap (violet)
@@ -138,6 +147,10 @@ Inkscape:
   the timer), then retransmissions, then timer expiries. Before this order
   was fixed, a timer could expire and be cancelled at the same instant, and
   the crossed-out clock was drawn over the red one.
+- Every instant is rounded to 1e-9 (`instant()` in `sim/engine.js`).
+  Otherwise 1.6 + 11 and 11 + 0.8 + 0.8 differ by 1e-15, a timer expires
+  just before the retransmission that should restart it, and both clocks
+  are drawn on top of each other.
 - Retransmissions go one by one as the link becomes free, before any new
   message, and one confirmed meanwhile is skipped. Before, all of them were
   queued at once when the timer expired, so a message confirmed while
@@ -166,9 +179,14 @@ Inkscape:
   in the following positions and every receiver label but the first one
   disappeared.
 - **Buffer snapshot**: taking it at the end of the event made the buffer of
-  `mensaje 0` already show 0, 1 and 2 in green (all three leave in the same
-  event). Now the sender increments `next` **before** calling `sendData` and
-  the simulation stores `sender.state()` with every transmission.
+  `mensaje 0` already show 0, 1 and 2 in green (all three are handed to the
+  link in the same event). Taking it when `sendData` is called was not
+  right either: a message handed to a busy link leaves later, and its row
+  showed the state of an earlier instant, so the marks of confirmed
+  messages fell on the wrong rows. Now every row takes the state at its
+  own instant (when the message leaves, after any ACK arriving then), and
+  messages handed to the link that have not left yet do not count as
+  sent.
 - **ES modules**: they do not load from `file://`; a static server is
   needed.
 - **CSS order**: `input.invalid` has the same specificity as

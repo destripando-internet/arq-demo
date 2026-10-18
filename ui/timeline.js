@@ -6,7 +6,7 @@
 // «ack N [buffer] note» per ACK.
 
 import { t } from './i18n.js';
-import { timeScale } from './timescale.js';
+import { timeScale, ROW } from './timescale.js';
 
 const TOP = 70;
 const BOX = 16;      // buffer cell
@@ -71,7 +71,12 @@ export function renderTimeline(trace, now, protocol) {
   }));
   const labelWidth = Math.max(0, ...data.map(d =>
     textWidth(d.text) + (d.timeout ? textWidth(`${t('timeout!')} `, NOTE_FONT, true) : 0)));
-  const sendRow = protocol.showBuffer ? rowWidth + GAP : 0;
+  // Buffer rows of the sender, each with the messages confirmed since the
+  // previous row. When they have already left the row, it grows to the left
+  // to show them.
+  const rows = senderRows(trace, y);
+  const extra = rows.map(r => Math.max(0, r.snap.base - 1 - (r.confirmed[0] ?? Infinity)));
+  const sendRow = protocol.showBuffer ? (Math.max(0, ...extra) * BOX) + rowWidth + GAP : 0;
   const SX = Math.max(240, 20 + sendRow + labelWidth + 6 + cols * COL + 16);  // sender axis
   const RX = SX + 300;                                                        // receiver axis
   const timerX = abs => SX - 16 - (cols - 1 - (abs % cols)) * COL;
@@ -149,11 +154,13 @@ export function renderTimeline(trace, now, protocol) {
   // Sender labels and buffers
   for (const d of data) {
     if (d.tx.tDep > now) continue;
-    const cy = y(d.tx.tDep);
     const timeout = d.timeout ? `<tspan class="note">${t('timeout!')} </tspan>` : '';
-    out.push(`<text class="label" x="${labelX}" y="${cy + 5}" text-anchor="end">${timeout}${d.text}</text>`);
-    if (protocol.showBuffer) out.push(senderRow(sendRowX, cy - 9, d.tx.sender, trace.params));
+    out.push(`<text class="label" x="${labelX}" y="${y(d.tx.tDep) + 5}" text-anchor="end">${timeout}${d.text}</text>`);
   }
+  if (protocol.showBuffer)
+    rows.forEach((r, i) => {
+      if (r.t <= now) out.push(senderRow(sendRowX, r.cy - 9, r.snap, r.confirmed, extra[i], trace.params));
+    });
   if (trace.loop && trace.loop.t <= now)
     out.push(`<text class="label note bad" x="${labelX}" y="${y(trace.loop.t) + 5}" text-anchor="end">${t('loop!')}</text>`);
 
@@ -207,17 +214,64 @@ const noteText = (x, cy, note) =>
 
 const mod = (n, M) => ((n % M) + M) % M;
 
-// Send buffer: cells from base-1 and the send window framed. In the window:
-// sent and not confirmed, not sent yet, or a free slot (no message left).
-function senderRow(x0, top, snap, { M, window: W, count, ...params }) {
-  const boxes = Array.from({ length: boxCount({ M, window: W }) }, (_, i) => {
-    const abs = snap.base - 1 + i;
+// Buffer rows of the sender: one per data message, with its state when it
+// leaves, and one when an ACK arrives that confirms something while no
+// message leaves (buffer only, at the height of the arrival). Such an ACK row
+// is left out if it would be closer than ROW to its neighbours; then the
+// next row shows what it confirmed. Every row has the messages confirmed
+// since the previous row.
+export function senderRows(trace, y) {
+  const all = [];
+  const departures = new Set();
+  for (const tx of trace.transmissions)
+    if (tx.kind === 'data') {
+      all.push({ t: tx.tDep, cy: y(tx.tDep), snap: tx.sender, data: true });
+      departures.add(tx.tDep);
+    }
+  for (const tx of trace.transmissions)
+    if (tx.kind === 'ack' && !tx.lost && tx.sender && !departures.has(tx.tArr))
+      all.push({ t: tx.tArr, cy: y(tx.tArr), snap: tx.sender, data: false });
+  all.sort((a, b) => a.t - b.t);
+
+  const rows = [];
+  all.forEach((row, i) => {
+    const prev = rows.at(-1);
+    const confirmed = newlyConfirmed(prev?.snap, row.snap);
+    if (!row.data) {
+      const next = all.slice(i + 1).find(r => r.data);
+      if (!confirmed.length
+          || (prev && row.cy < prev.cy + ROW - 0.5)
+          || (next && row.cy > next.cy - ROW + 0.5)) return;
+    }
+    rows.push({ ...row, confirmed });
+  });
+  return rows;
+}
+
+// Messages sent and not confirmed at the previous row (prev) that are
+// confirmed at this one (snap), in order.
+export function newlyConfirmed(prev, snap) {
+  if (!prev) return [];
+  const out = [];
+  for (let abs = prev.base; abs < prev.next; abs++)
+    if (!prev.acked.includes(abs) && (abs < snap.base || snap.acked.includes(abs))) out.push(abs);
+  return out;
+}
+
+// Send buffer: cells from base-1 and the send window framed, always in the
+// same column; `extra` more cells to the left when needed to show every
+// message confirmed since the previous row. In the window: sent and not
+// confirmed, not sent yet, or a free slot (no message left).
+function senderRow(x0, top, snap, confirmed, extra, { M, window: W, count }) {
+  const boxes = Array.from({ length: extra + boxCount({ M, window: W }) }, (_, i) => {
+    const abs = snap.base - 1 - extra + i;
     let state = '';
-    if (abs >= snap.base && abs < snap.base + W && !snap.acked.includes(abs))
+    if (confirmed.includes(abs)) state = 'acked';
+    else if (abs >= snap.base && abs < snap.base + W && !snap.acked.includes(abs))
       state = abs < snap.next ? 'sent' : abs < count ? 'unsent' : 'free';
     return { seq: mod(abs, M), state };
   });
-  return bufferRow(x0, top, boxes, W);
+  return bufferRow(x0 - extra * BOX, top, boxes, W, extra + 1);
 }
 
 // Receive buffer: the messages this arrival made deliverable (ready for the
@@ -242,6 +296,11 @@ export function bufferRow(x0, top, boxes, W, start = 1) {
     `<text class="box-n" x="${x0 + i * BOX + BOX / 2}" y="${top + 14}" text-anchor="middle">${seq}</text>`);
   const width = Math.max(0, Math.min(W, boxes.length - start));
   out.push(`<rect class="window" x="${x0 + start * BOX - 1}" y="${top - 1}" width="${width * BOX + 2}" height="${BOX + 4}" rx="4"/>`);
+  // A small check on the cells confirmed since the previous row.
+  boxes.forEach(({ state }, i) => {
+    if (state === 'acked')
+      out.push(`<path class="tick" d="M${x0 + i * BOX + 9},${top - 1}l2.5,2.8l5,-6"/>`);
+  });
   return out.join('');
 }
 

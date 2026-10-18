@@ -130,3 +130,11 @@ test('no losses, no retransmissions', () => {
     assert.equal(trace.deliveries.length, 6, proto.id);
   }
 });
+
+test('go-back-N: going back restarts the later timers, also with decimal delays', () => {
+  // Each later timer would expire just when the link is free to resend its
+  // message; with Ttrans = 0.8, floating point used to put the expiry first.
+  const trace = simulate(goBackN, { k: 4, window: 14, count: 12, tTrans: 0.8, tProp: 5, timeout: 11, forcedLosses: ['d0.1'] });
+  const expired = trace.timers.filter(tm => tm.end === 'expire').map(tm => tm.abs);
+  assert.deepEqual(expired, [0]);
+});
