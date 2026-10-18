@@ -6,6 +6,8 @@
 //   onTimeout  'go-back': when a timer expires, that message and every later
 //              one already sent are retransmitted.
 //              'selective': only that message is retransmitted.
+//              Retransmissions go one by one, as the link becomes free, and
+//              before any new message; one confirmed meanwhile is skipped.
 //   buffer     false: the receiver discards out-of-order messages (Wr = 1)
 //              and always confirms the last in-order one; `ack` only changes
 //              how the sender reads that confirmation.
@@ -24,6 +26,7 @@ export class Sender {
     this.base = 0;          // first unconfirmed message (absolute number)
     this.next = 0;          // next new message to send
     this.acked = new Set(); // confirmed messages above base
+    this.resend = [];       // waiting to be retransmitted
   }
 
   start() {
@@ -31,6 +34,7 @@ export class Sender {
   }
 
   fill() {
+    if (this.resend.length) return;  // retransmissions go first
     while (this.next < this.count && this.next < this.base + this.W)
       this.send(this.next++);
   }
@@ -62,8 +66,24 @@ export class Sender {
 
   onTimeout(abs) {
     const last = this.opts.onTimeout === 'go-back' ? this.next - 1 : abs;
+    const idle = this.resend.length === 0;
     for (let a = abs; a <= last; a++)
-      if (!this.acked.has(a)) this.send(a);
+      if (!this.acked.has(a) && !this.resend.includes(a)) this.resend.push(a);
+    this.resend.sort((x, y) => x - y);
+    if (idle) this.ctx.whenLinkFree(() => this.retransmit());
+  }
+
+  // Retransmits the next pending message, if still unconfirmed, and waits
+  // for the link to be free again; then new messages may go.
+  retransmit() {
+    while (this.resend.length) {
+      const abs = this.resend.shift();
+      if (abs < this.base || this.acked.has(abs)) continue;
+      this.send(abs);
+      this.ctx.whenLinkFree(() => this.retransmit());
+      return;
+    }
+    this.fill();
   }
 
   state() {

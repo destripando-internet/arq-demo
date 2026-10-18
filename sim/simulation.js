@@ -8,6 +8,11 @@
 import { Engine } from './engine.js';
 import { chance } from './rng.js';
 
+// Order of the events that happen at the same instant: an arrival first (an
+// ACK arriving just in time cancels the timer), then the retransmissions,
+// then the timers that expire.
+const ARRIVAL = 0, LINK = 1, TIMER = 2;
+
 export const DEFAULTS = {
   k: 1,            // sequence number bits
   window: 1,       // send window (Ws)
@@ -77,7 +82,7 @@ export function simulate(protocol, opts = {}) {
       inFlight--;
       onArrival();
       snap();
-    });
+    }, ARRIVAL);
   };
 
   // A timer that expires again with nothing in flight, no loss and the same
@@ -103,6 +108,14 @@ export function simulate(protocol, opts = {}) {
 
   const senderCtx = {
     now: () => engine.now(),
+
+    // Calls fn as soon as the link is free (it may be now).
+    whenLinkFree(fn) {
+      engine.schedule(Math.max(engine.now(), linkFree), () => {
+        fn();
+        snap();
+      }, LINK);
+    },
 
     // Puts message abs on the channel; returns its departure time (the link
     // may still be busy sending the previous one).
@@ -148,7 +161,7 @@ export function simulate(protocol, opts = {}) {
         }
         sender.onTimeout(abs);
         snap();
-      });
+      }, TIMER);
       timers.set(abs, { ev, rec });
     },
 

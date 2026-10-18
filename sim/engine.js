@@ -10,11 +10,12 @@ export class Engine {
     return this.t;
   }
 
-  // Schedules fn at absolute time t. Ties keep insertion order.
-  schedule(t, fn) {
-    const ev = { t, fn, cancelled: false };
+  // Schedules fn at absolute time t. At the same t, events run by rank and
+  // then in insertion order.
+  schedule(t, fn, rank = 0) {
+    const ev = { t, rank, fn, cancelled: false };
     let i = this.queue.length;
-    while (i > 0 && this.queue[i - 1].t > t) i--;
+    while (i > 0 && (this.queue[i - 1].t > t || (this.queue[i - 1].t === t && this.queue[i - 1].rank > rank))) i--;
     this.queue.splice(i, 0, ev);
     return ev;
   }

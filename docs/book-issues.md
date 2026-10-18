@@ -119,9 +119,9 @@ Consistent versions, with Ttrans = Tprop = 1 and a timer of 7:
   t = 9, 10 and 11 and those messages are retransmitted; RTX 2 arrives at
   t = 11, the receiver delivers 2–5 and answers ack 6, which reaches the
   sender at t = 12 and cancels every timer; RTX 3 and 4 are duplicates and
-  get ack 6 too. Timer 5 expires at t = 12, the same instant ack 6 arrives:
-  in the demo the timer goes first and 5 is retransmitted as well; with the
-  book's geometry ack 6 arrives slightly earlier and 5 is not retransmitted.
+  get ack 6 too. Timer 5 would expire at t = 12, the same instant ack 6
+  arrives; an arrival goes before an expiry, so 5 is not retransmitted, as
+  in the figure.
 
 **E10 · line 195 · fixed with E9.** «se retransmiten los mensajes [2--5] y el
 receptor los confirma uno a uno» matches neither the figure (it retransmits

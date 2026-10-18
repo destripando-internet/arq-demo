@@ -132,6 +132,18 @@ Inkscape:
   (book issue E5).
 - The selective-repeat figure cannot be reproduced (book issue E9).
 
+## Order of simultaneous events
+
+- At the same instant: arrivals first (an ACK arriving just in time cancels
+  the timer), then retransmissions, then timer expiries. Before this order
+  was fixed, a timer could expire and be cancelled at the same instant, and
+  the crossed-out clock was drawn over the red one.
+- Retransmissions go one by one as the link becomes free, before any new
+  message, and one confirmed meanwhile is skipped. Before, all of them were
+  queued at once when the timer expired, so a message confirmed while
+  waiting was sent anyway, and its restarted timer was cancelled at the
+  same instant.
+
 ## Loss keys and URL
 
 - `d<abs>.<attempt>`: data message number abs (not modulo), n-th attempt.

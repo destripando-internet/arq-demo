@@ -96,8 +96,9 @@ test('selective repeat with individual ACKs: only the lost message is retransmit
 
 test('selective repeat with cumulative ACKs: buffered messages are retransmitted too', () => {
   const trace = run(selectiveRepeat, { ack: 'cumulative' });
-  assert.deepEqual(seqs(trace, 'data'), [0, 1, 2, 3, 4, 5, 2, 3, 4, 5]);
-  assert.deepEqual(seqs(trace, 'ack'), [1, 2, 2, 2, 2, 6, 6, 6, 6]);
+  // Ack 6 arrives just when the timer of 5 would expire: it wins.
+  assert.deepEqual(seqs(trace, 'data'), [0, 1, 2, 3, 4, 5, 2, 3, 4]);
+  assert.deepEqual(seqs(trace, 'ack'), [1, 2, 2, 2, 2, 6, 6, 6]);
   assert.deepEqual(delivered(trace), [0, 1, 2, 3, 4, 5]);
 });
 

@@ -69,9 +69,9 @@ When a timer expires, only that message is retransmitted.
   ACKs 1 2 4 5 6 3 and only 2 is retransmitted, as in the corrected figure
   (E9, E10).
 - **R2** [Figure `selective-repeat` with cumulative ACKs](http://localhost:8765/?p=sr&k=3&w=4&n=6&tt=1&d=1&to=7&ack=cumulative&l=d2.1&t=end).
-  ACKs 1 2 2 2 2 6 6 6 6 and 2, 3, 4 and 5 are retransmitted, although 3,
-  4 and 5 were already in the receiver's buffer: the drawback of cumulative
-  ACKs.
+  ACKs 1 2 2 2 2 6 6 6 and 2, 3 and 4 are retransmitted, although they
+  were already in the receiver's buffer: the drawback of cumulative ACKs.
+  (Ack 6 arrives just when the timer of 5 would expire, so 5 is spared.)
 - **R3** [An ACK is lost, individual ACKs](http://localhost:8765/?p=sr&k=3&w=4&n=6&tt=1&d=1&to=7&ack=individual&l=a2&t=end).
   The timer of 1 expires and 1 is retransmitted; the receiver had already
   delivered it, marks it as a duplicate and **confirms it again** (E11).
