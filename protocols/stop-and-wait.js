@@ -1,15 +1,18 @@
-// Parada y espera: es repetición continua con k = 1 y ventana 1.
+// Stop-and-wait («parada y espera»): go-back-N with k = 1 and a window of 1.
+// With a single message in flight, cumulative and individual ACKs coincide.
 
 import { goBackN } from './go-back-n.js';
 
 export const stopAndWait = {
   ...goBackN,
   id: 'saw',
-  name: 'Parada y espera',
-  fixed: true,  // k y W no son configurables
+  name: 'Stop-and-wait',
+  fixed: true,  // k and W cannot be changed
   showBuffer: false,
-  defaults: { k: 1, window: 1, count: 3, tProp: 1, timeout: 5 },
+  defaults: { k: 1, window: 1, count: 3, tTrans: 1, tProp: 1, timeout: 5 },
   maxWindow: () => 1,
-  // Figura stop-and-wait del libro: se pierde el mensaje 1 y luego el 3.er ACK.
-  book: { params: { k: 1, window: 1, count: 3, tProp: 1, timeout: 5 }, losses: ['d1.1', 'a3'] },
+  ackModes: ['cumulative'],
+  requiredAck: null,
+  // Book figure stop-and-wait: message 1 is lost, then the 3rd ACK.
+  book: { params: { k: 1, window: 1, count: 3, tTrans: 1, tProp: 1, timeout: 5 }, losses: ['d1.1', 'a3'] },
 };

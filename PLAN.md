@@ -1,245 +1,214 @@
-# arq-demo — plan de trabajo
+# arq-demo — work plan
 
-Aplicación web estática para demostrar el funcionamiento de los protocolos
-ARQ descritos en el capítulo «Confiabilidad y control de flujo»
-(`reliability.tex`) del libro. Se despliega en GitHub Pages sin paso de
-compilación.
+Static web application that shows how the ARQ protocols described in the
+chapter «Confiabilidad y control de flujo» (`reliability.tex`) of the book
+work. It is deployed on GitHub Pages with no build step.
 
-## Objetivos
+## Goals
 
-- Mostrar en un diagrama espacio-tiempo (emisor ↔ receptor) cómo se
-  comportan parada y espera, repetición continua y repetición selectiva ante
-  pérdidas de datos y de confirmaciones.
-- Poder reproducir exactamente los escenarios de las figuras del libro
-  (`stop-and-wait`, `go-back-n`, `selective-repeat`).
-- Permitir experimentar: cambiar `k`, el tamaño de ventana, el timeout, el
-  retardo y la probabilidad de pérdida, o «perder» un mensaje concreto con
-  un clic.
-- Que añadir un protocolo o una variante nueva suponga escribir un único
-  fichero.
+- Show in a space-time diagram (sender ↔ receiver) how stop-and-wait,
+  go-back-N and selective repeat behave when data messages and ACKs are
+  lost.
+- Reproduce the scenarios of the book's figures (`stop-and-wait`,
+  `go-back-n`, `selective-repeat`) exactly, or show why they cannot be.
+- Allow experimenting: change `k`, the window size, the timer, the delays and
+  the loss probability, or «lose» a specific message with a click.
+- Check the chapter's constraints and formulas against the simulation.
+- Adding a protocol or a variant should mean writing a single file.
 
-Fuera de alcance (por ahora): TCP real (control de congestión, RTO
-adaptativo), comunicación dúplex/piggybacking, corrupción de bits/checksum
-(una corrupción se modela igual que una pérdida: el receptor descarta).
+Out of scope (for now): real TCP (congestion control, adaptive RTO),
+full-duplex communication and piggybacking, bit corruption and checksums (a
+corrupted message is modelled as a lost one: the receiver discards it), NACK.
 
-## Tecnología
+## Technology
 
-- HTML + CSS + JavaScript con módulos ES (`<script type="module">`).
-- Visualización en SVG generado desde JS.
-- Sin framework, sin bundler, sin dependencias de `npm` en tiempo de
-  ejecución.
-- Tests con el runner integrado de Node (`node --test`), sin dependencias.
-- Despliegue: GitHub Pages desde la rama `master`, carpeta raíz.
+- HTML + CSS + JavaScript with ES modules (`<script type="module">`).
+- SVG generated from JS.
+- No framework, no bundler, no `npm` dependencies. The controls use the CSS
+  of Bootstrap 5.3 and Bootstrap Icons 1.11 from jsDelivr (pinned versions);
+  no JavaScript library.
+- **Node.js is not required.** The app runs in any browser served by any
+  static server; the tests run in the browser too (`test-web/`). Node is
+  only an alternative way to run the same tests (`node --test`).
+- Deployment: GitHub Pages from the `master` branch, root folder.
 
-Si la interfaz crece mucho (varios paneles, mucho estado de formularios), se
-puede reconsiderar Svelte + Vite; el motor y los protocolos no cambiarían.
+If the interface grows a lot (many panels, lots of form state), Svelte + Vite
+could be reconsidered; the engine and the protocols would not change.
 
-## Arquitectura
+## Languages
+
+The user interface is in English and Spanish (`ui/i18n.js`, ES/EN switch in
+the header; by default `?lang=`, the last choice or the browser's
+language). The simulation only produces keys (receiver notes), translated
+by the UI. Code, comments, tests and documentation are in English.
+
+## Architecture
 
 ```
 arq-demo/
 ├── index.html
 ├── style.css
-├── main.js              # arranque: lee controles, crea simulación, conecta UI
+├── main.js              # startup: reads controls, runs the simulation, wires the UI
 ├── sim/
-│   ├── engine.js        # simulador de eventos discretos
-│   ├── channel.js       # canal unidireccional: retardo, pérdida
-│   ├── rng.js           # PRNG con semilla (p.ej. mulberry32)
-│   └── seq.js           # aritmética modular de números de secuencia
+│   ├── engine.js        # discrete-event simulator
+│   ├── simulation.js    # channel, timers and trace
+│   ├── analysis.js      # chapter constraints and utilisation
+│   ├── links.js         # link presets (figures, LAN, fibre, satellite)
+│   └── rng.js           # deterministic randomness per (seed, key)
 ├── protocols/
-│   ├── base.js          # interfaz común Sender / Receiver
+│   ├── arq.js           # sliding-window sender and receiver shared by all
 │   ├── stop-and-wait.js
 │   ├── go-back-n.js
 │   └── selective-repeat.js
-├── scenarios/
-│   └── book.js          # escenarios de las figuras del libro
 ├── ui/
-│   ├── timeline.js      # diagrama espacio-tiempo en SVG
-│   ├── buffers.js       # buffer de envío/recepción y ventana
-│   ├── controls.js      # play/pausa/paso, parámetros, selector de escenario
-│   └── log.js           # registro textual de eventos
-└── test/
-    └── *.test.js
+│   ├── timeline.js      # space-time diagram in SVG
+│   ├── state.js         # buffers, constraints and utilisation panel
+│   ├── guide.js         # «Guide» tab: legend and explanations
+│   └── i18n.js          # English and Spanish texts
+├── test/
+│   └── *.test.js        # node --test, or test-web/ in the browser
+└── test-web/            # browser runner for the same tests
 ```
 
-### Principio clave: el motor no dibuja
+### Key principle: the engine does not draw
 
-`sim/` y `protocols/` no tocan el DOM. El motor emite eventos y la UI se
-suscribe a ellos. Así:
+`sim/` and `protocols/` never touch the DOM. `simulate()` runs a whole
+scenario and returns a trace; the UI only draws the trace up to time `now`.
+So:
 
-- los protocolos se prueban con `node --test` sin navegador;
-- la UI puede rebobinar: como la simulación es determinista (semilla +
-  pérdidas forzadas), basta con volver a ejecutarla hasta el instante `t`.
+- the protocols can be tested without a browser (or in one, without a UI);
+- the UI can rewind: since the simulation is deterministic (seed + forced
+  losses), it is enough to run it again and redraw.
 
-### Motor (`sim/engine.js`)
+### Engine (`sim/engine.js`)
 
-- Reloj virtual en unidades abstractas (no ms reales).
-- Cola de eventos ordenada por tiempo; en empate, por orden de inserción.
-- API mínima: `schedule(t, fn)`, `cancel(id)`, `now()`, `run(until)`,
-  `step()`.
-- Emite eventos hacia la UI:
-  `send`, `deliver`, `lost`, `discard`, `buffer`, `ack-send`,
-  `timer-start`, `timer-cancel`, `timer-expire`, `retransmit`,
-  `deliver-up` (entrega a la capa superior), `window-change`.
+- Virtual clock in abstract units.
+- Event queue ordered by time; ties keep insertion order.
+- API: `schedule(t, fn)`, `cancel(ev)`, `now()`, `run(until)`.
 
-### Canal (`sim/channel.js`)
+### Channel and timers (`sim/simulation.js`)
 
-- Dos instancias independientes: datos (emisor→receptor) y confirmaciones
-  (receptor→emisor).
-- Parámetros: `tTrans` (retardo de transmisión), `tProp` (propagación),
-  `pLoss` (probabilidad de pérdida).
-- Lista de pérdidas forzadas: «perder la 1.ª transmisión del mensaje 1»,
-  «perder el 2.º ACK»… Es lo que usan los escenarios del libro y el clic
-  sobre un mensaje en vuelo.
-- Primera versión: canal FIFO (sin reordenación). La reordenación queda como
-  extensión.
+- Data channel (sender → receiver) and ACK channel (receiver → sender).
+- Parameters: `tTrans` (transmission delay of a data message; ACKs have
+  none), `tProp` (propagation delay), `lossRate`.
+- Forced losses: «lose the 1st transmission of message 1», «lose the 2nd
+  ACK»… Used by the book scenarios, the URL and clicks on the diagram.
+- FIFO channel (no reordering).
 
-### Interfaz de protocolo (`protocols/base.js`)
+### Protocol interface
 
-```js
-class Sender {
-  constructor({ k, window, timeout, sim, channel }) {}
-  start() {}            // empieza a enviar mientras la ventana lo permita
-  onAck(ack) {}         // llega una confirmación (o NACK)
-  onTimeout(seq) {}     // expira el temporizador de un mensaje
-  state() {}            // { base, next, inFlight[], window } para la UI
-}
+A protocol is an object with `id`, `name`, `defaults`, `maxWindow(k)`,
+`receiverWindow(Ws)`, `ackModes`, `requiredAck`, `createSender(ctx, params)`,
+`createReceiver(ctx, params)` and the `book` scenario. Senders implement
+`start()`, `onAck(n)`, `onTimeout(abs)` and `state()`; receivers implement
+`onData({ seq, abs })` and `state()`. The three protocols share the sender
+and receiver in `protocols/arq.js`.
 
-class Receiver {
-  constructor({ k, window, sim, channel }) {}
-  onData(msg) {}        // llega un mensaje de datos
-  state() {}            // { expected, buffered[] } para la UI
-}
-```
+## Semantics
 
-Cada protocolo exporta `{ name, Sender, Receiver, maxWindow(k) }`.
+It follows the general theory (Tanenbaum; Kurose and Ross) where the book is
+not specific or contradicts itself; see «Protocol decisions» in
+[docs/animation.md](docs/animation.md) and the numbered list of issues in
+[docs/book-issues.md](docs/book-issues.md).
 
-## Semántica a respetar (según el libro)
+- **ACK numbering** (the book's convention): an ACK carries the number of the
+  confirmed message + 1. With cumulative ACKs it is the next expected one.
+- **One timer per message** in every protocol.
+- **Stop-and-wait**: `k = 1`, `Ws = Wr = 1`. The receiver discards
+  duplicates but confirms them.
+- **Go-back-N**: `Ws ≤ 2^k − 1`, `Wr = 1`, **cumulative** ACKs. The receiver
+  discards anything but the expected message and answers with the next
+  expected number (duplicate ACKs). When a timer expires, that message and
+  every later one already sent are retransmitted. Individual ACKs can be
+  selected to show that the protocol then fails.
+- **Selective repeat**: `Ws = Wr ≤ 2^(k−1)`. The receiver buffers the
+  messages in its window and delivers all the contiguous ones once the gap
+  is filled. **Individual** ACKs by default (also for duplicates already
+  delivered), cumulative as an option. When a timer expires, only that
+  message is retransmitted.
+- **NACK**: postponed.
+- **Endless loops** are detected: when a timer expires again with nothing in
+  flight, no loss and the same sender and receiver state as at its previous
+  expiry, the simulation stops and says so.
+- The UI warns (does not forbid) when `Ws + Wr ≤ 2^k`, cumulative ACKs in
+  go-back-N, `Ws ≥ 1 + 2a` or `timeout > RTT` do not hold, and flags the
+  failure when the receiver accepts a retransmission as a new message or the
+  transfer never ends.
 
-- **Convenio de ACK**: la confirmación lleva el número de secuencia del
-  **siguiente** mensaje esperado. ACK 1 confirma el mensaje 0.
-- **Sin confirmación acumulativa por defecto** en ningún protocolo: ACK n
-  confirma solo el mensaje n−1. La confirmación acumulativa será una opción
-  activable (pendiente).
-- **Parada y espera**: `k = 1`, `Ws = Wr = 1`. El receptor descarta los
-  duplicados pero los confirma igualmente.
-- **Repetición continua**: `Ws ≤ 2^k − 1`, `Wr = 1`. El receptor descarta los
-  mensajes fuera de secuencia y, por cada uno, reenvía la confirmación del
-  último mensaje contiguo (confirmaciones duplicadas). Un temporizador por
-  mensaje; al expirar, se retransmite solo ese mensaje (así aparece en la
-  figura `go-back-n`).
-- **Repetición selectiva**: `Ws = Wr ≤ 2^(k−1)`. El receptor guarda en su
-  buffer los mensajes fuera de secuencia y, al rellenar el hueco, entrega
-  todos los contiguos a la capa superior.
-- **Confirmación acumulativa** (opción, desactivada por defecto): un ACK n
-  confirma todos los mensajes anteriores a n.
-- **NACK** (variante de repetición selectiva): al detectar un hueco, el
-  receptor envía un NACK con el número que falta; el emisor retransmite de
-  inmediato y cancela ese temporizador.
-- La UI debe avisar (no prohibir) cuando la ventana supera el máximo del
-  protocolo, y poder mostrar el fallo por ambigüedad del ejemplo del libro
-  (k = 2, se envían los 4 mensajes, se pierden todos los ACK).
+## Visualisation
 
-## Visualización
+- **Space-time diagram**: two vertical axes (sender and receiver), time
+  going down and slanted arrows for messages, in the style of the book's
+  figures: different colours for data and ACKs; a lost message ends
+  half-way with a square; timers with a green clock when started, crossed
+  out when cancelled and red when they expire; «[RTX]» on retransmissions.
+- **Buffers**: rows of cells with the sequence numbers, the window framed in
+  orange and the unconfirmed (sender) or buffered (receiver) messages in
+  green, as in the figures.
+- **Channel occupancy**: each data message is a band that lasts Ttrans.
+- **Controls**, in two groups: *Algorithm* (protocol, k, Ws, ACK mode,
+  timer) and *Scenario* (link, Ttrans, Tprop, messages, random loss,
+  playback speed, initial scenario, clear losses); a playback bar (start,
+  previous event, play/pause, next event, end); clicks on the arrows to lose
+  or deliver them.
+- **Tabs**: *Simulation* and *Guide* (legend, utilisation, constraints and
+  how to use the demo).
+- **Panel**: constraints, theoretical and measured utilisation, number of
+  retransmissions.
 
-- **Diagrama espacio-tiempo**: dos ejes verticales (emisor y receptor), el
-  tiempo hacia abajo y flechas inclinadas para los mensajes. Hay que mantener
-  el estilo de las figuras del libro:
-  - datos y ACK con colores distintos;
-  - pérdida: la flecha termina a medio camino con una ✕;
-  - temporizador: reloj verde al arrancar, tachado al cancelarse, rojo al
-    expirar;
-  - etiqueta «RTX» en las retransmisiones;
-  - mensajes descartados, guardados en buffer y entregados, diferenciados
-    (el FIXME de la figura `selective-repeat` pide marcar los entregados en
-    otro color: la demo puede hacerlo).
-- **Buffers**: fila de casillas con los números de secuencia (módulo 2^k),
-  con la ventana de emisión como marco naranja y los enviados sin confirmar
-  en verde, como en las figuras. Lo mismo para el buffer de recepción en
-  repetición selectiva.
-- **Controles**: play/pausa, paso a paso (evento a evento), velocidad,
-  reinicio y selector de escenario.
-- **Métricas** (fase posterior): aprovechamiento del canal `U` medido frente
-  al teórico `Ws / (1 + 2a)`, número de retransmisiones y duplicados.
+## Phases
 
-## Fases
+- **Phase 0 — Skeleton.** Layout and colour tokens (light/dark). Done.
+- **Phase 1 — Engine + stop-and-wait.** Done.
+- **Phase 2 — Sliding window.** Go-back-N and selective repeat, send and
+  receive buffers, parameter controls. Done.
+- **Phase 3 — Interaction.** Click to lose, rewind, URL state. Done, except
+  a textual event log synchronised with the diagram.
+- **Phase 4 — Variants and metrics.** Cumulative ACKs as a selective repeat
+  option, window-too-large failure, utilisation panel. Done; pending: NACK
+  and presets with the fibre and satellite links of table `tab:bdp-k`.
+- **Phase 5 — Polish.** English/Spanish UI and guide tab done. Pending:
+  accessibility (keyboard, contrast, `prefers-reduced-motion`).
 
-### Fase 0 — Esqueleto
-- `index.html` con el layout, `style.css` con tokens de color (claro/oscuro).
-- Activar GitHub Pages y comprobar que se sirve.
+## Running locally
 
-### Fase 1 — Motor + parada y espera
-- `engine.js`, `channel.js`, `rng.js`, `seq.js` con tests.
-- `stop-and-wait.js` con tests que reproducen los tres casos de la figura
-  `stop-and-wait` (sin pérdida, pérdida de datos, pérdida del ACK →
-  duplicado).
-- `timeline.js` mínimo: ejes, flechas, pérdidas y temporizadores.
-- Controles básicos: play/pausa/paso.
-
-**Hito**: el escenario de la figura `stop-and-wait` se ve animado.
-
-### Fase 2 — Ventana deslizante
-- `go-back-n.js` y `selective-repeat.js` con tests contra los escenarios de
-  las figuras `go-back-n` (k = 2, se pierde el 1) y `selective-repeat`
-  (k = 3, se pierde el 2).
-- `buffers.js`: buffer de envío, ventana y buffer de recepción.
-- Selector de protocolo y de parámetros (`k`, `W`, timeout, `tProp`, `pLoss`,
-  semilla).
-
-**Hito**: los tres protocolos reproducen sus figuras del libro.
-
-### Fase 3 — Interacción
-- Clic sobre un mensaje o ACK en vuelo para perderlo.
-- Rebobinar / ir a un instante (reejecutar de forma determinista).
-- Registro textual de eventos sincronizado con el diagrama.
-- Enlace compartible: parámetros y pérdidas codificados en la URL
-  (`?p=gbn&k=2&loss=d1.1`), para enlazar escenarios concretos desde el libro.
-
-### Fase 4 — Variantes y métricas
-- Confirmación acumulativa y NACK como opciones de repetición selectiva.
-- Demostración del fallo por ventana demasiado grande.
-- Panel de aprovechamiento del canal (`U`, `a`, `1 + 2a`), con los ejemplos
-  de fibra y satélite de la tabla `tab:bdp-k` como presets.
-
-### Fase 5 — Pulido
-- Accesibilidad (teclado, contraste, `prefers-reduced-motion`).
-- Textos de la UI en español; posible i18n más adelante.
-- README con instrucciones para ejecutar en local y para añadir un protocolo.
-
-## Cómo ejecutar en local
-
-Los módulos ES no funcionan con `file://`, así que hace falta un servidor
-estático cualquiera:
+ES modules do not load from `file://`, so any static server will do:
 
 ```
-python3 -m http.server
+python3 -m http.server 8765
 ```
 
-Tests:
+Tests: <http://localhost:8765/test-web/>, or `node --test` if Node is
+installed.
 
-```
-node --test
-```
+## Status
 
-## Estado
+- v0 (2026-10-18): engine, stop-and-wait and go-back-N, SVG diagram with
+  timers and send buffer, state panel, click to lose/deliver, book scenario
+  and URL state.
+- v1 (2026-10-18): ARQ semantics decided by checking the book against the
+  simulation and the theory; selective repeat (individual or cumulative
+  ACKs, receive buffer in the diagram); configurable Ttrans and Tprop, with
+  the channel occupancy drawn as bands; constraints and utilisation panel
+  (theoretical and measured); go-back-N with individual ACKs as a
+  counter-example; tests runnable in the browser; a link per case in
+  [DEMOS.md](DEMOS.md).
+- v2 (2026-10-18): English/Spanish UI; Bootstrap controls in two groups
+  (algorithm and scenario); link presets (book figures, LAN, fibre,
+  satellite) with «custom» when edited; endless-loop detection; labels on
+  one line with their buffer and at the height of their arrow; guide tab
+  with the legend and the explanations.
+- v3 (2026-10-18): time scale per Ttrans with compressed idle stretches;
+  new buffer colours (send: sent, not sent; receive: ready, held; free
+  slots without colour); ACK ends offset from the data arrows; a and 1 + 2a computed next to
+  the delays; speed next to the playback buttons; shorter guide; no
+  mention of the book in the UI; the per-instant buffer line was removed
+  (the diagram already shows it).
+- v4 (2026-10-19): schematic time axis, arrows with the same angle on every
+  link (steeper only when several messages leave during one propagation);
+  playback at constant speed over the drawing; times with two decimals.
 
-- v0 (2026-10-18): motor, parada y espera y repetición continua, diagrama
-  SVG con temporizadores y buffer de envío, panel de estado, clic para
-  perder/entregar, escenario del libro y estado en la URL. Pendiente decidir
-  si el nivel de interactividad aconseja cambiar de tecnología.
-- **En pausa** hasta concretar el funcionamiento exacto de los ARQ (ver
-  «Cuestiones de protocolo pendientes» en [docs/animacion.md](docs/animacion.md),
-  donde también está lo aprendido sobre la animación).
+## Open decisions
 
-## Decisiones abiertas
-
-- **Semántica de ACK en repetición selectiva**: el texto del libro dice que
-  cada confirmación se refiere a un único mensaje, pero la figura usa el
-  número del siguiente contiguo esperado (ACK 2 duplicados). Hay que decidir
-  qué hace por defecto la demo (¿ACK individual con opción «acumulativa»?) y
-  que coincida con lo que finalmente diga el libro.
-- **Unidades de tiempo**: abstractas (`tTrans = 1`) o derivadas de `L`, `R`,
-  `d` y `v` como en la sección de BDP. Propuesta: abstractas en el diagrama,
-  físicas solo en el panel de métricas.
-- **Repositorio y enlace desde el libro**: URL definitiva de GitHub Pages, y
-  si se enlaza con `\url{}`, con QR o con ambos.
+- **Repository and link from the book**: final GitHub Pages URL, and whether
+  to link with `\url{}`, a QR code or both.

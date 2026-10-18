@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>arq-demo tests</title>
+  <!-- The tests import node:test and node:assert/strict; replace them here. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "node:test": "./runner.js",
+        "node:assert/strict": "./assert.js"
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    #results { list-style: none; padding: 0; }
+    #results li { padding: 2px 0; }
+    .fail { color: var(--bad); }
+    #results .error { margin: 2px 0 0 1.5em; color: var(--muted); font-size: 0.85rem; white-space: pre-wrap; }
+    #summary { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tests</h1>
+    <p class="hint">The same files that <code>node --test</code> runs. <a href="../">Back to the demo</a></p>
+  </header>
+  <p id="summary">Running…</p>
+  <ul id="results"></ul>
+
+  <script type="module">
+    import { run } from './runner.js';
+
+    // Add every new file in test/ here.
+    const FILES = ['book-scenarios', 'analysis', 'timescale'];
+
+    for (const name of FILES) await import(`../test/${name}.test.js`);
+    const results = await run();
+    const failed = results.filter(r => !r.ok).length;
+
+    document.getElementById('results').innerHTML = results.map(r => `
+      <li class="${r.ok ? 'pass' : 'fail'}">${r.ok ? '✔' : '✘'} ${r.name}
+        ${r.ok ? '' : `<div class="error">${r.error}</div>`}</li>`).join('');
+    const summary = document.getElementById('summary');
+    summary.textContent = `${results.length - failed}/${results.length} passed`;
+    summary.className = failed ? 'fail' : 'pass';
+    document.body.dataset.result = failed ? 'fail' : 'pass';
+  </script>
+</body>
+</html>

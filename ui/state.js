@@ -1,37 +1,73 @@
-// Panel con el estado del emisor y del receptor en el instante actual.
+// Panel with the sender and receiver state at the current time, the chapter's
+// constraints and the channel utilisation.
 
-export function renderState(trace, now, protocol) {
-  const { M, window: W, count, k } = trace.params;
-  let snap = trace.snapshots[0];
-  for (const s of trace.snapshots) if (s.t <= now) snap = s;
+import { t } from './i18n.js';
 
-  const senderBoxes = [];
-  for (let i = 0; i < M; i++) {
-    const inWindow = Array.from({ length: W }, (_, j) => snap.base + j).some(a => a % M === i);
-    const pending = range(snap.base, snap.next).some(a => a % M === i && !snap.acked.includes(a));
-    senderBoxes.push(`<span class="box${pending ? ' pending' : ''}${inWindow ? ' in-window' : ''}">${i}</span>`);
-  }
-  const receiverBoxes = [];
-  for (let i = 0; i < M; i++)
-    receiverBoxes.push(`<span class="box${i === snap.expected ? ' in-window' : ''}">${i}</span>`);
-
-  const max = protocol.maxWindow(k);
-  const warning = W > max
-    ? `<p class="warning">W<sub>s</sub> = ${W} supera el máximo para k = ${k} (${max}): el protocolo puede fallar.</p>`
-    : '';
-
+export function renderState(trace, an) {
   return `
-    <div class="side">
-      <h2>Emisor</h2>
-      <div class="buf">${senderBoxes.join('')}</div>
-      <p>confirmados ${snap.base}/${count}</p>
-    </div>
-    <div class="side">
-      <h2>Receptor</h2>
-      <div class="buf">${receiverBoxes.join('')}</div>
-      <p>entregados ${snap.delivered}/${count}</p>
-    </div>
-    ${warning}`;
+    ${alerts(an, trace.params.M)}
+    <div class="panels">
+      <section>
+        <h2>${t('constraints')}</h2>
+        <ul class="checks">${checks(an).map(([level, html]) =>
+          `<li class="${level}"><span class="icon">${ICON[level]}</span><span>${html}</span></li>`).join('')}</ul>
+      </section>
+      <section>
+        <h2>${t('utilisation')}</h2>
+        ${metrics(an, trace.params)}
+      </section>
+    </div>`;
 }
 
-const range = (a, b) => Array.from({ length: Math.max(0, b - a) }, (_, i) => a + i);
+// «t = … · confirmed … · delivered …» at the current time.
+export function progress(trace, now) {
+  let snap = trace.snapshots[0];
+  for (const s of trace.snapshots) if (s.t <= now) snap = s;
+  // Deliveries of a message other than the one due (accepted duplicates)
+  const wrong = trace.deliveries.filter((d, i) => d.t <= now && d.abs !== i).length;
+  const text = t('progress', {
+    time: +now.toFixed(2), confirmed: snap.base, delivered: snap.delivered, count: trace.params.count,
+  });
+  return text + (wrong ? ` <strong class="bad">${t('wrong', { n: wrong })}</strong>` : '');
+}
+
+const ICON = { ok: '✓', warn: '⚠', error: '✗' };
+
+function alerts(an, M) {
+  const out = [];
+  if (an.failure) out.push(t('alert.failure', { t: num(an.failure.t) }));
+  if (an.loop) out.push(t('alert.loop', { t: num(an.loop.t), seq: an.loop.abs % M }));
+  if (an.unfinished) out.push(t('alert.unfinished', { t: num(an.tMax) }));
+  return out.map(text => `<p class="fail-banner"><span class="icon">✗</span> ${text}</p>`).join('');
+}
+
+// [level, html] for each constraint of the chapter.
+function checks(an) {
+  const args = {
+    Ws: an.Ws, Wr: an.Wr, M: an.M, max: an.maxWindow,
+    min: +(1 + 2 * an.a).toPrecision(4), timeout: num(an.timeout), rtt: num(an.rtt),
+  };
+  const check = (key, ok, bad) => [ok ? 'ok' : bad, t(`check.${key}.${ok ? 'ok' : bad}`, args)];
+  return [
+    check('window', an.windowOk, 'error'),
+    ...(an.requiredAck ? [check('ack', an.ackOk, 'error')] : []),
+    check('efficient', an.efficient, 'warn'),
+    check('timeout', an.timeoutOk, 'warn'),
+  ];
+}
+
+function metrics(an, { count, tTrans }) {
+  const measured = an.uMeasured === null ? '—'
+    : `${count}·${num(tTrans)} / ${num(an.duration)} = ${num(an.uMeasured)} (${pct(an.uMeasured)})`;
+  return `
+    <dl class="metrics">
+      <dt>${t('u.theory')}</dt><dd>${num(an.uTheory)} (${pct(an.uTheory)})</dd>
+      <dt>${t('u.measured')}</dt><dd>${measured}</dd>
+      <dt>${t('retransmissions')}</dt><dd>${an.retransmissions}</dd>
+    </dl>
+    <p class="hint">${t('u.hint')}</p>`;
+}
+
+// Two decimals, or two significant digits for tiny values (a LAN's a).
+export const num = x => String(Math.abs(x) >= 0.01 || x === 0 ? +x.toFixed(2) : +x.toPrecision(2));
+const pct = x => `${x >= 0.01 || x === 0 ? Math.round(x * 100) : +(x * 100).toPrecision(2)} %`;

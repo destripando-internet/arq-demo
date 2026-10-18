@@ -1,55 +1,114 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Protocolos ARQ</title>
+  <title>ARQ protocols</title>
+  <!-- Bootstrap follows the system's light/dark preference. -->
+  <script>
+    document.documentElement.dataset.bsTheme =
+      matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Protocolos ARQ</h1>
-    <p class="hint">Clic en una flecha para perder ese mensaje (o para entregarlo si estaba perdido).</p>
+  <header class="top">
+    <h1 data-i18n="title">ARQ protocols</h1>
+    <div class="btn-group btn-group-sm" role="group" id="lang" data-i18n-aria="language">
+      <button type="button" class="btn btn-outline-secondary" data-lang="es">ES</button>
+      <button type="button" class="btn btn-outline-secondary" data-lang="en">EN</button>
+    </div>
   </header>
 
+  <ul class="nav nav-tabs" id="tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button type="button" class="nav-link active" role="tab" data-tab="sim" data-i18n="tab.sim"></button></li>
+    <li class="nav-item" role="presentation">
+      <button type="button" class="nav-link" role="tab" data-tab="guide" data-i18n="tab.guide"></button></li>
+  </ul>
+
+  <div id="tab-sim" role="tabpanel">
   <form id="controls" onsubmit="return false">
-    <div class="row">
-      <label>Protocolo <select name="p"></select></label>
-      <label>k <input name="k" type="number" min="1" max="4"></label>
-      <label>W<sub>s</sub> <input name="w" type="number" min="1" max="16"></label>
-      <label>Mensajes <input name="n" type="number" min="1" max="30"></label>
-      <label>Timeout <input name="to" type="number" min="1" max="60" step="0.5"></label>
+    <div class="groups">
+      <fieldset class="group">
+        <legend data-i18n="algorithm"></legend>
+        <div class="line">
+          <label><span data-i18n="protocol"></span>
+            <select name="p" class="form-select form-select-sm"></select></label>
+          <label><span data-i18n="ack"></span>
+            <select name="ack" class="form-select form-select-sm"></select></label>
+        </div>
+        <div class="line">
+          <label data-i18n-title="k.title">k
+            <input name="k" type="number" min="1" max="5" class="form-control form-control-sm narrow"></label>
+          <label data-i18n-title="w.title"><span>W<sub>s</sub></span>
+            <input name="w" type="number" min="1" max="31" class="form-control form-control-sm narrow"></label>
+          <label data-i18n-title="timeout.title"><span data-i18n="timeout"></span>
+            <input name="to" type="number" min="0.1" max="2000" step="any" class="form-control form-control-sm"></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend data-i18n="scenario"></legend>
+        <div class="line">
+          <label data-i18n-title="link.title"><span data-i18n="link"></span>
+            <select name="link" class="form-select form-select-sm"></select></label>
+        </div>
+        <div class="line">
+          <label data-i18n-title="tt.title"><span>T<sub>trans</sub></span>
+            <input name="tt" type="number" min="0.1" max="20" step="any" class="form-control form-control-sm"></label>
+          <label data-i18n-title="d.title"><span>T<sub>prop</sub></span>
+            <input name="d" type="number" min="0" max="1000" step="any" class="form-control form-control-sm"></label>
+          <label data-i18n-title="calc.title">a <output id="calc-a" class="calc"></output></label>
+          <label data-i18n-title="calc.title">1 + 2a <output id="calc-2a" class="calc"></output></label>
+        </div>
+        <div class="line">
+          <label><span data-i18n="messages"></span>
+            <input name="n" type="number" min="1" max="60" class="form-control form-control-sm"></label>
+          <label><span data-i18n="loss"></span>
+            <input name="r" type="range" min="0" max="50" step="5" value="0" class="form-range">
+            <output for="r" data-unit="%"></output></label>
+        </div>
+        <div class="line">
+          <button type="button" class="btn btn-sm btn-outline-primary" data-act="book" data-i18n-title="book.title">
+            <i class="bi bi-arrow-counterclockwise"></i> <span data-i18n="book"></span></button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-act="clear" data-i18n-title="clear.title">
+            <i class="bi bi-eraser"></i> <span data-i18n="clear"></span></button>
+        </div>
+      </fieldset>
     </div>
-    <div class="row">
-      <label>Propagación <input name="d" type="range" min="0.5" max="6" step="0.5">
-        <output for="d"></output></label>
-      <label>Pérdida aleatoria <input name="r" type="range" min="0" max="50" step="5" value="0">
-        <output for="r" data-unit="%"></output></label>
-    </div>
-    <div class="row buttons">
-      <button type="button" data-act="reset" title="Al principio">⏮</button>
-      <button type="button" data-act="play" title="Reproducir">▶</button>
-      <button type="button" data-act="step" title="Siguiente evento">⏵|</button>
-      <button type="button" data-act="end" title="Al final">⏭</button>
-      <label>Velocidad
-        <select name="speed">
-          <option value="0.5">0,5×</option>
+
+    <div class="player">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-secondary" data-act="reset" data-i18n-title="reset"><i class="bi bi-skip-backward-fill"></i></button>
+        <button type="button" class="btn btn-outline-secondary" data-act="prev" data-i18n-title="prev"><i class="bi bi-skip-start-fill"></i></button>
+        <button type="button" class="btn btn-primary" data-act="play" data-i18n-title="play"><i class="bi bi-play-fill"></i></button>
+        <button type="button" class="btn btn-outline-secondary" data-act="step" data-i18n-title="step"><i class="bi bi-skip-end-fill"></i></button>
+        <button type="button" class="btn btn-outline-secondary" data-act="end" data-i18n-title="end"><i class="bi bi-skip-forward-fill"></i></button>
+      </div>
+      <label><span data-i18n="speed"></span>
+        <select name="speed" class="form-select form-select-sm">
+          <option value="0.5">0.5×</option>
           <option value="1" selected>1×</option>
           <option value="2">2×</option>
           <option value="4">4×</option>
-        </select>
-      </label>
-      <span class="spacer"></span>
-      <button type="button" data-act="book">Escenario del libro</button>
-      <button type="button" data-act="clear">Quitar pérdidas forzadas</button>
+        </select></label>
+      <span id="clock" class="clock-readout">t = 0</span>
     </div>
   </form>
 
   <section id="state"></section>
 
+  <p class="hint diagram-hint" id="diagram-hint"></p>
+
   <div id="timeline-wrap">
     <svg id="timeline" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
+  </div>
+
+  <div id="tab-guide" class="guide" role="tabpanel" hidden></div>
 
   <script type="module" src="main.js"></script>
 </body>

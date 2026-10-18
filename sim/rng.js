@@ -1,5 +1,5 @@
-// Aleatorio determinista: el mismo (semilla, clave) da siempre el mismo valor.
-// Así una pérdida aleatoria no cambia al reejecutar la simulación.
+// Deterministic randomness: the same (seed, key) always gives the same value,
+// so a random loss does not change when the simulation is run again.
 
 export function chance(seed, key) {
   let h = (seed ^ 0x9e3779b9) >>> 0;

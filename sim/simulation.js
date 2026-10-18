@@ -1,28 +1,31 @@
-// Ejecuta un protocolo completo sobre un canal con retardo y pérdidas, y
-// devuelve una traza con todo lo ocurrido. La UI solo lee la traza.
+// Runs a whole protocol over a channel with delays and losses, and returns a
+// trace of everything that happened. The UI only reads the trace.
 //
-// Claves de pérdida:
-//   d<abs>.<intento>  mensaje de datos número abs (sin módulo), intento n
-//   a<n>              n-ésima confirmación enviada por el receptor
+// Loss keys:
+//   d<abs>.<attempt>  data message number abs (not modulo), n-th attempt
+//   a<n>              n-th ACK sent by the receiver
 
 import { Engine } from './engine.js';
 import { chance } from './rng.js';
 
 export const DEFAULTS = {
-  k: 1,            // bits del número de secuencia
-  window: 1,       // ventana de emisión (Ws)
-  count: 3,        // mensajes a enviar
-  tTrans: 1,       // retardo de transmisión de un mensaje de datos
-  tProp: 1,        // retardo de propagación
-  timeout: 9,      // temporizador de retransmisión
-  lossRate: 0,     // probabilidad de pérdida aleatoria
+  k: 1,            // sequence number bits
+  window: 1,       // send window (Ws)
+  count: 3,        // messages to send
+  tTrans: 1,       // transmission delay of a data message
+  tProp: 1,        // propagation delay
+  timeout: 9,      // retransmission timer
+  ack: null,       // ACK mode; null: the protocol's first one
+  lossRate: 0,     // random loss probability
   seed: 1,
   forcedLosses: [],
-  tMax: 300,
+  tMax: null,      // end of the simulation; null: proportional to the parameters
 };
 
 export function simulate(protocol, opts = {}) {
   const p = { ...DEFAULTS, ...protocol.defaults, ...opts };
+  if (!protocol.ackModes.includes(p.ack)) p.ack = protocol.ackModes[0];
+  p.tMax ??= Math.max(100, 10 * (p.count * (p.tTrans + 2 * p.tProp) + p.timeout));
   const M = 2 ** p.k;
   const forced = toLossMap(p.forcedLosses);
   const engine = new Engine();
@@ -34,6 +37,8 @@ export function simulate(protocol, opts = {}) {
     notes: [],
     deliveries: [],
     snapshots: [],
+    done: null,  // time at which the sender has everything confirmed
+    loop: null,  // { t, abs } if an endless retransmission loop was detected
     end: 0,
   };
 
@@ -42,17 +47,50 @@ export function simulate(protocol, opts = {}) {
   const lastTimer = new Map();
   let linkFree = 0;
   let ackCount = 0;
+  let inFlight = 0;            // transmissions that will still arrive
+  let lossCount = 0;
+  const expiries = new Map();  // abs → { state, lossCount } at its last expiry
   let sender, receiver;
 
   const isLost = key =>
     forced.has(key) ? forced.get(key) : chance(p.seed, key) < p.lossRate;
 
-  const snap = () => trace.snapshots.push({
-    t: engine.now(),
-    ...sender.state(),
-    ...receiver.state(),
-    delivered: trace.deliveries.length,
-  });
+  const snap = () => {
+    const s = sender.state();
+    if (trace.done === null && s.base >= p.count) trace.done = engine.now();
+    trace.snapshots.push({
+      t: engine.now(),
+      ...s,
+      ...receiver.state(),
+      delivered: trace.deliveries.length,
+    });
+  };
+
+  // Schedules the arrival of a transmission, unless it is lost.
+  const arrive = (tx, onArrival) => {
+    if (tx.lost) {
+      lossCount++;
+      return;
+    }
+    inFlight++;
+    engine.schedule(tx.tArr, () => {
+      inFlight--;
+      onArrival();
+      snap();
+    });
+  };
+
+  // A timer that expires again with nothing in flight, no loss and the same
+  // sender and receiver state as at its previous expiry will keep doing so:
+  // the sender would retransmit forever.
+  const isLoop = abs => {
+    // justDelivered only describes the last arrival, not the protocol state.
+    const { justDelivered, ...rcv } = receiver.state();
+    const state = JSON.stringify([sender.state(), rcv]);
+    const prev = expiries.get(abs);
+    expiries.set(abs, { state, lossCount });
+    return inFlight === 0 && prev?.state === state && prev.lossCount === lossCount;
+  };
 
   const stopTimer = (abs, how) => {
     const timer = timers.get(abs);
@@ -66,8 +104,8 @@ export function simulate(protocol, opts = {}) {
   const senderCtx = {
     now: () => engine.now(),
 
-    // Pone en el canal el mensaje abs; devuelve el instante de salida (el
-    // enlace puede estar ocupado transmitiendo el anterior).
+    // Puts message abs on the channel; returns its departure time (the link
+    // may still be busy sending the previous one).
     sendData(abs) {
       const attempt = (attempts.get(abs) ?? 0) + 1;
       attempts.set(abs, attempt);
@@ -78,23 +116,23 @@ export function simulate(protocol, opts = {}) {
         key, kind: 'data', seq: abs % M, abs, rtx: attempt > 1,
         tDep, tArr: tDep + p.tTrans + p.tProp,
         lost: isLost(key), forced: forced.has(key),
-        sender: sender.state(),  // estado del emisor al enviar
+        sender: sender.state(),  // sender state when sending
       };
       trace.transmissions.push(tx);
-      if (!tx.lost)
-        engine.schedule(tx.tArr, () => {
-          receiver.onData({ seq: tx.seq, abs });
-          snap();
-        });
+      arrive(tx, () => receiver.onData({ seq: tx.seq, abs }));
       return tDep;
     },
 
     startTimer(abs, from) {
+      // On restart, the old timer's line reaches the new start.
+      const running = timers.get(abs);
       stopTimer(abs, 'restart');
+      if (running) running.rec.tEnd = from;
       const prev = lastTimer.get(abs);
       const rec = {
         abs, tStart: from, tEnd: null, end: null,
-        // continuación de un temporizador que acaba de expirar
+        restarted: !!running,  // it replaces a timer that was still running
+        // continuation of a timer that has just expired
         afterExpire: prev?.end === 'expire' && prev.tEnd === engine.now(),
       };
       lastTimer.set(abs, rec);
@@ -103,6 +141,11 @@ export function simulate(protocol, opts = {}) {
         rec.tEnd = engine.now();
         rec.end = 'expire';
         timers.delete(abs);
+        if (isLoop(abs)) {
+          trace.loop = { t: engine.now(), abs };
+          engine.stop();
+          return;
+        }
         sender.onTimeout(abs);
         snap();
       });
@@ -124,13 +167,10 @@ export function simulate(protocol, opts = {}) {
         key, kind: 'ack', seq,
         tDep: engine.now(), tArr: engine.now() + p.tProp,
         lost: isLost(key), forced: forced.has(key),
+        receiver: receiver.state(),  // receiver state when confirming
       };
       trace.transmissions.push(tx);
-      if (!tx.lost)
-        engine.schedule(tx.tArr, () => {
-          sender.onAck(seq);
-          snap();
-        });
+      arrive(tx, () => sender.onAck(seq));
     },
 
     deliver(abs) {
@@ -150,14 +190,14 @@ export function simulate(protocol, opts = {}) {
   engine.run(p.tMax);
 
   trace.end = Math.max(
-    0,
+    0, trace.done ?? 0,
     ...trace.transmissions.map(tx => tx.lost ? (tx.tDep + tx.tArr) / 2 : tx.tArr),
     ...trace.timers.map(tm => tm.tEnd ?? tm.tStart),
   );
   return trace;
 }
 
-// Admite un Map clave→bool o una lista de claves (todas perdidas).
+// Accepts a Map key→bool or a list of keys (all lost).
 function toLossMap(losses) {
   if (losses instanceof Map) return losses;
   return new Map([...losses].map(key => [key, true]));

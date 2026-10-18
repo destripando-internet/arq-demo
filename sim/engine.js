@@ -1,4 +1,4 @@
-// Simulador de eventos discretos: reloj virtual y cola de eventos ordenada.
+// Discrete-event simulator: virtual clock and ordered event queue.
 
 export class Engine {
   constructor() {
@@ -10,8 +10,7 @@ export class Engine {
     return this.t;
   }
 
-  // Programa fn en el instante absoluto t. En empate, se respeta el orden de
-  // inserción.
+  // Schedules fn at absolute time t. Ties keep insertion order.
   schedule(t, fn) {
     const ev = { t, fn, cancelled: false };
     let i = this.queue.length;
@@ -22,6 +21,11 @@ export class Engine {
 
   cancel(ev) {
     if (ev) ev.cancelled = true;
+  }
+
+  // Drops every pending event: run() returns.
+  stop() {
+    this.queue.length = 0;
   }
 
   run(until = Infinity) {

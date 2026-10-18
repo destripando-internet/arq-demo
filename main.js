@@ -1,31 +1,71 @@
 import { simulate } from './sim/simulation.js';
+import { analyze } from './sim/analysis.js';
+import { LINKS, linkFor } from './sim/links.js';
 import { PROTOCOLS, byId } from './protocols/index.js';
 import { renderTimeline, eventTimes } from './ui/timeline.js';
-import { renderState } from './ui/state.js';
+import { timeScale } from './ui/timescale.js';
+import { renderState, progress, num } from './ui/state.js';
+import { renderGuide } from './ui/guide.js';
+import { LANGS, lang, setLang, t } from './ui/i18n.js';
 
-const UNITS_PER_SECOND = 2;  // velocidad de reproducción a 1×
-const FIELDS = ['k', 'w', 'n', 'd', 'to', 'r'];
+// Playback at 1×, in pixels of the diagram per second: an RTT takes 1.5 s
+// with a = 1. Slower for larger a, so a long propagation feels longer,
+// though far from to scale (about 3.7 s per RTT on a satellite link).
+const PX_PER_SECOND = 75;
+const playbackRate = ({ tTrans, tProp }) => PX_PER_SECOND / (1 + 0.25 * Math.log2(1 + tProp / tTrans));
+const FIELDS = ['k', 'w', 'n', 'tt', 'd', 'to', 'r', 'ack'];
+const LANG_KEY = 'arq-demo.lang';
 
 const form = document.getElementById('controls');
 const f = form.elements;
 const svg = document.getElementById('timeline');
 const panel = document.getElementById('state');
 const wrap = document.getElementById('timeline-wrap');
+const clockOut = document.getElementById('clock');
 const playBtn = form.querySelector('[data-act=play]');
+const langBar = document.getElementById('lang');
+const tabs = document.getElementById('tabs');
+const hint = document.getElementById('diagram-hint');
+const guide = document.getElementById('tab-guide');
 
-let protocol, trace, times;
-let losses = new Map();  // clave → true (perder) / false (entregar)
-let now = 0;
+let protocol, trace, times, analysis, scale;
+let losses = new Map();  // key → true (lose) / false (deliver)
+// At rest, before anything happens: t = 0 already shows data 0 leaving.
+const START = -1e-6;
+let now = START;
 let playing = false;
 let lastFrame = 0;
 
-for (const p of PROTOCOLS) f.p.add(new Option(p.name, p.id));
+// Numeric value of a field, clamped to its min/max.
+function value(input) {
+  const v = +input.value;
+  const min = +input.min, max = +input.max;
+  return Number.isFinite(v) && input.value !== '' ? Math.min(max, Math.max(min, v)) : min;
+}
 
 function readParams() {
   return {
-    k: +f.k.value, window: +f.w.value, count: +f.n.value,
-    tProp: +f.d.value, timeout: +f.to.value, lossRate: +f.r.value / 100,
+    k: value(f.k), window: value(f.w), count: value(f.n),
+    tTrans: value(f.tt), tProp: value(f.d), timeout: value(f.to),
+    lossRate: value(f.r) / 100, ack: f.ack.value,
   };
+}
+
+// Options of a select from [value, text] pairs, keeping the selected value.
+function fillSelect(select, options, selected = select.value) {
+  select.replaceChildren(...options.map(([v, text]) => new Option(text, v)));
+  select.value = selected;
+  if (select.selectedIndex < 0) select.selectedIndex = 0;
+}
+
+function fillAckModes(proto, selected) {
+  fillSelect(f.ack, proto.ackModes.map(m => [m, t(`ack.${m}`)]), selected);
+  f.ack.disabled = proto.ackModes.length === 1;
+}
+
+// The link select shows the preset matching Ttrans and Tprop, or «custom».
+function showLink() {
+  f.link.value = linkFor(value(f.tt), value(f.d))?.id ?? 'custom';
 }
 
 function loadParams(proto, params = {}) {
@@ -34,9 +74,22 @@ function loadParams(proto, params = {}) {
   f.k.value = p.k;
   f.w.value = p.window;
   f.n.value = p.count;
+  f.tt.value = p.tTrans;
   f.d.value = p.tProp;
   f.to.value = p.timeout;
   f.k.disabled = f.w.disabled = !!proto.fixed;
+  fillAckModes(proto, p.ack);
+  showLink();
+}
+
+// Highlights the fields that break one of the chapter's constraints.
+function markInputs(an) {
+  for (const input of [f.k, f.w, f.to, f.ack]) input.classList.remove('invalid', 'warn');
+  if (!an.windowOk) f.k.classList.add('invalid'), f.w.classList.add('invalid');
+  else if (!an.efficient && !f.w.disabled) f.w.classList.add('warn');
+  if (!an.ackOk) f.ack.classList.add('invalid');
+  if (!an.timeoutOk) f.to.classList.add('warn');
+  wrap.classList.toggle('failed', !!(an.failure || an.loop || an.unfinished));
 }
 
 function updateOutputs() {
@@ -47,7 +100,12 @@ function updateOutputs() {
 function rerun() {
   protocol = byId(f.p.value);
   trace = simulate(protocol, { ...readParams(), forcedLosses: losses });
+  analysis = analyze(trace, protocol);
+  scale = timeScale(trace);
   times = eventTimes(trace);
+  document.getElementById('calc-a').value = num(analysis.a);
+  document.getElementById('calc-2a').value = +(1 + 2 * analysis.a).toPrecision(4);
+  markInputs(analysis);
   now = Math.min(now, trace.end);
   updateOutputs();
   writeUrl();
@@ -60,7 +118,9 @@ function draw() {
   svg.setAttribute('width', r.width);
   svg.setAttribute('height', r.height);
   svg.innerHTML = r.svg;
-  panel.innerHTML = renderState(trace, now, protocol);
+  panel.innerHTML = renderState(trace, analysis);
+  clockOut.innerHTML = progress(trace, now);
+  hint.textContent = t('hint.arrows');
   if (playing) {
     const yPx = r.playheadY * svg.clientWidth / r.width;
     if (yPx > wrap.scrollTop + wrap.clientHeight * 0.8)
@@ -72,19 +132,24 @@ function tick(ts) {
   if (!playing) return;
   const dt = lastFrame ? (ts - lastFrame) / 1000 : 0;
   lastFrame = ts;
-  now = Math.min(trace.end, now + dt * UNITS_PER_SECOND * +f.speed.value);
+  const py = scale.y(now) + dt * playbackRate(trace.params) * +f.speed.value;
+  now = Math.min(trace.end, scale.time(py));
   draw();
   if (now >= trace.end) setPlaying(false);
   else requestAnimationFrame(tick);
 }
 
+function showPlayButton() {
+  playBtn.innerHTML = `<i class="bi bi-${playing ? 'pause' : 'play'}-fill"></i>`;
+  playBtn.title = t(playing ? 'pause' : 'play');
+}
+
 function setPlaying(on) {
   playing = on;
-  playBtn.textContent = on ? '⏸' : '▶';
-  playBtn.title = on ? 'Pausa' : 'Reproducir';
+  showPlayButton();
   if (!on) return;
   if (now >= trace.end) {
-    now = 0;
+    now = START;
     wrap.scrollTop = 0;
   }
   lastFrame = 0;
@@ -95,13 +160,18 @@ const actions = {
   play: () => setPlaying(!playing),
   reset() {
     setPlaying(false);
-    now = 0;
+    now = START;
     wrap.scrollTop = 0;
+    draw();
+  },
+  prev() {
+    setPlaying(false);
+    now = times.findLast(x => x < now - 1e-9) ?? START;
     draw();
   },
   step() {
     setPlaying(false);
-    now = times.find(t => t > now + 1e-9) ?? trace.end;
+    now = times.find(x => x > now + 1e-9) ?? trace.end;
     draw();
   },
   end() {
@@ -111,10 +181,10 @@ const actions = {
   },
   book() {
     const { params, losses: keys } = protocol.book;
-    loadParams(protocol, params);
+    loadParams(protocol, { ack: f.ack.value, ...params });
     f.r.value = 0;
     losses = new Map(keys.map(k => [k, true]));
-    now = 0;
+    now = START;
     rerun();
     setPlaying(true);
   },
@@ -134,7 +204,15 @@ form.addEventListener('input', e => {
   if (e.target === f.p) {
     loadParams(byId(f.p.value));
     losses.clear();
-    now = 0;
+    now = START;
+  } else if (e.target === f.link) {
+    const link = LINKS.find(l => l.id === f.link.value);
+    if (!link) return;  // «custom» changes nothing
+    f.tt.value = link.tTrans;
+    f.d.value = link.tProp;
+    f.to.value = link.timeout ?? byId(f.p.value).defaults.timeout;
+  } else if (e.target === f.tt || e.target === f.d) {
+    showLink();
   }
   rerun();
 });
@@ -142,31 +220,88 @@ form.addEventListener('input', e => {
 svg.addEventListener('click', e => {
   const key = e.target.closest('[data-key]')?.dataset.key;
   if (!key) return;
-  const tx = trace.transmissions.find(t => t.key === key);
+  const tx = trace.transmissions.find(x => x.key === key);
   if (losses.has(key)) losses.delete(key);
   else losses.set(key, !tx.lost);
   rerun();
 });
 
-// Estado en la URL, para enlazar un escenario concreto:
-// ?p=gbn&k=2&w=3&n=4&d=1&to=6&r=0&l=d1.1,-a2&t=end
+// Language: ?lang=, then the last choice, then the browser's language.
+function initialLang() {
+  const q = new URLSearchParams(location.search).get('lang');
+  let stored = null;
+  try { stored = localStorage.getItem(LANG_KEY); } catch {}
+  const browser = navigator.language?.toLowerCase().startsWith('es') ? 'es' : 'en';
+  return [q, stored, browser].find(l => LANGS.includes(l));
+}
+
+function applyLang(code) {
+  setLang(code);
+  document.documentElement.lang = lang();
+  document.title = t('title');
+  for (const el of document.querySelectorAll('[data-i18n]')) el.innerHTML = t(el.dataset.i18n);
+  for (const el of document.querySelectorAll('[data-i18n-title]')) el.title = t(el.dataset.i18nTitle);
+  for (const el of document.querySelectorAll('[data-i18n-aria]')) el.ariaLabel = t(el.dataset.i18nAria);
+  for (const b of langBar.querySelectorAll('[data-lang]')) b.classList.toggle('active', b.dataset.lang === lang());
+  fillSelect(f.p, PROTOCOLS.map(p => [p.id, t(`proto.${p.id}`)]));
+  if (protocol) fillAckModes(protocol, f.ack.value);
+  fillSelect(f.link, [...LINKS.map(l => [l.id, t(`link.${l.id}`)]), ['custom', t('link.custom')]]);
+  showLink();
+  showPlayButton();
+  guide.innerHTML = renderGuide();
+}
+
+// Tabs: «sim» (controls and diagram) and «guide»; the URL hash keeps it.
+function showTab(name) {
+  for (const b of tabs.querySelectorAll('[data-tab]')) {
+    const on = b.dataset.tab === name;
+    b.classList.toggle('active', on);
+    b.ariaSelected = on;
+    document.getElementById(`tab-${b.dataset.tab}`).hidden = !on;
+  }
+  if (name !== 'sim') setPlaying(false);
+  const base = location.pathname + location.search;
+  history.replaceState(null, '', name === 'sim' ? base : `${base}#${name}`);
+}
+
+tabs.addEventListener('click', e => {
+  const name = e.target.closest('[data-tab]')?.dataset.tab;
+  if (name) showTab(name);
+});
+
+langBar.addEventListener('click', e => {
+  const code = e.target.closest('[data-lang]')?.dataset.lang;
+  if (!code) return;
+  try { localStorage.setItem(LANG_KEY, code); } catch {}
+  applyLang(code);
+  draw();
+});
+
+// State in the URL, to link a specific scenario:
+// ?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&r=0&l=d1.1,-a2&t=end
 function writeUrl() {
   const q = new URLSearchParams({ p: protocol.id });
-  for (const name of FIELDS) q.set(name, f[name].value);
+  for (const name of FIELDS) if (!f[name].disabled) q.set(name, f[name].value);
   const l = [...losses].map(([k, lost]) => (lost ? '' : '-') + k).join(',');
   if (l) q.set('l', l);
-  history.replaceState(null, '', `?${q}`);
+  const urlLang = new URLSearchParams(location.search).get('lang');
+  if (urlLang) q.set('lang', lang());
+  history.replaceState(null, '', `?${q}${location.hash}`);
 }
 
 function readUrl() {
   const q = new URLSearchParams(location.search);
   loadParams(byId(q.get('p')));
-  for (const name of FIELDS) if (q.has(name)) f[name].value = q.get(name);
+  for (const name of FIELDS) if (q.has(name) && !f[name].disabled) f[name].value = q.get(name);
+  if (f.ack.selectedIndex < 0) f.ack.selectedIndex = 0;
+  showLink();
   losses = new Map((q.get('l') ?? '').split(',').filter(Boolean)
     .map(k => k.startsWith('-') ? [k.slice(1), false] : [k, true]));
-  const t = q.get('t');
-  now = t === 'end' ? Infinity : +(t ?? 0);
+  const time = q.get('t');
+  now = time === 'end' ? Infinity : time === null ? START : +time;
 }
 
+applyLang(initialLang());
 readUrl();
 rerun();
+showTab(location.hash === '#guide' ? 'guide' : 'sim');
