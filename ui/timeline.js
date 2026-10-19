@@ -265,18 +265,24 @@ export function newlyConfirmed(prev, snap) {
 
 // Send buffer: cells from base-1 and the send window framed, always in the
 // same column; `extra` more cells to the left when needed to show every
-// message confirmed since the previous row. In the window: sent and not
-// confirmed, not sent yet, or a free slot (no message left).
-function senderRow(x0, top, snap, confirmed, extra, { M, window: W, count }) {
-  const boxes = Array.from({ length: extra + boxCount({ M, window: W }) }, (_, i) => {
+// message confirmed since the previous row (see sendBoxes).
+function senderRow(x0, top, snap, confirmed, extra, params) {
+  const boxes = sendBoxes(snap, confirmed, extra, params);
+  return bufferRow(x0 - extra * BOX, top, boxes, params.window, extra + 1);
+}
+
+// Cells of a send buffer row, from base-1-extra. A message not sent yet is
+// green also beyond the window: it waits for the window to move.
+export function sendBoxes(snap, confirmed, extra, { M, window: W, count }) {
+  return Array.from({ length: extra + boxCount({ M, window: W }) }, (_, i) => {
     const abs = snap.base - 1 - extra + i;
+    const inWindow = abs >= snap.base && abs < snap.base + W;
     let state = '';
     if (confirmed.includes(abs)) state = 'acked';
-    else if (abs >= snap.base && abs < snap.base + W && !snap.acked.includes(abs))
-      state = abs < snap.next ? 'sent' : abs < count ? 'unsent' : 'free';
+    else if (abs >= snap.base && !snap.acked.includes(abs))
+      state = abs < snap.next ? 'sent' : abs < count ? 'unsent' : inWindow ? 'free' : '';
     return { seq: mod(abs, M), state };
   });
-  return bufferRow(x0 - extra * BOX, top, boxes, W, extra + 1);
 }
 
 // Receive buffer: the messages this arrival made deliverable (ready for the

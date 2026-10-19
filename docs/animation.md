@@ -67,6 +67,8 @@ Inkscape:
 - Send buffer (only with a window > 1): left of each `data N`, M+1 cells
   starting at `base − 1`, the window framed in orange. In the window: sent
   and not confirmed (light red), not sent yet (green), free slot (no colour).
+  A message not sent yet is green beyond the window too (waiting for it to
+  move); cells with no message behind them have no colour.
   These colours differ from the book's figures (green for sent and not
   confirmed). Messages confirmed by the ACKs that arrived since the previous
   row are light blue with a small ✓; when they have already left the row

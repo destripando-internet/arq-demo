@@ -34,7 +34,7 @@ const axisBreak = () => icon(76, 30, `<line class="axis" x1="20" y1="0" x2="20" 
   <text class="gap" x="34" y="19">Δt</text>`);
 
 const sendBuffer = () => icon(84, 26, bufferRow(2, 6, [
-  { seq: 3, state: 'acked' }, { seq: 0, state: 'sent' }, { seq: 1, state: 'unsent' }, { seq: 2, state: 'free' }, { seq: 3 },
+  { seq: 3, state: 'acked' }, { seq: 0, state: 'sent' }, { seq: 1, state: 'unsent' }, { seq: 2, state: 'unsent' }, { seq: 3, state: 'unsent' },
 ], 3));
 const recvBuffer = () => icon(148, 24, bufferRow(2, 3, [
   { seq: 1 }, { seq: 2, state: 'ready' }, { seq: 3, state: 'ready' }, { seq: 4, state: 'free' },
