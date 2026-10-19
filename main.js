@@ -8,6 +8,7 @@ import { renderState, progress, num } from './ui/state.js';
 import { renderGuide } from './ui/guide.js';
 import { LANGS, lang, setLang, t } from './ui/i18n.js';
 import { demoById } from './ui/demos.js';
+import { createTape } from './ui/tape.js';
 
 // Playback at 1×, in pixels of the diagram per second: an RTT takes 1.5 s
 // with a = 1. Slower for larger a, so a long propagation feels longer,
@@ -29,6 +30,7 @@ const tabs = document.getElementById('tabs');
 const hint = document.getElementById('diagram-hint');
 const guide = document.getElementById('tab-guide');
 const demoBox = document.getElementById('demo');
+const tape = createTape(document.getElementById('tape'));
 
 let protocol, trace, times, analysis, scale;
 let losses = new Map();  // key → true (lose) / false (deliver)
@@ -107,6 +109,7 @@ function rerun() {
   analysis = analyze(trace, protocol);
   scale = timeScale(trace);
   times = eventTimes(trace);
+  tape.load(trace);
   document.getElementById('calc-a').value = num(analysis.a);
   document.getElementById('calc-2a').value = +(1 + 2 * analysis.a).toPrecision(4);
   markInputs(analysis);
@@ -152,6 +155,7 @@ function draw() {
   svg.innerHTML = r.svg;
   panel.innerHTML = renderState(trace, analysis);
   clockOut.innerHTML = progress(trace, now);
+  tape.update(now);
   hint.textContent = t('hint.arrows');
   if (playing) {
     const yPx = r.playheadY * svg.clientWidth / r.width;

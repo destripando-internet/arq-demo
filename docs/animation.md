@@ -94,6 +94,21 @@ Inkscape:
   `#aade87`. In the demo ACKs are blue to tell them from data messages (in
   the book both are black); still to be confirmed.
 
+## Send window tape (`ui/tape.js`)
+
+- Above the diagram, every message in order, labelled with its sequence
+  number and evenly spaced (a wider gap between cycles of 2^k looked
+  uneven; the repeated numbers already show the reuse). The send window is
+  a thick orange frame with a light orange fill, behind the cells so it
+  does not tint their colours.
+- It follows the playback: a message turns red when it leaves; when an ACK
+  confirms messages, they flash blue with a ✓ and the frame slides to the
+  right (CSS transitions, 0.45 s). Going backwards (previous event, start)
+  updates it without animation. Messages not sent yet are green; empty
+  dashed slots after the last message let the window keep its size.
+- This view complements the rows of the diagram, where, as in the book's
+  figures, the frame stays still and the numbers move under it.
+
 ## Geometry and layout (`ui/timeline.js`, `ui/timescale.js`)
 
 - The time axis (`ui/timescale.js`) is linear within each diagram, so all
