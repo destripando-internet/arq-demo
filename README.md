@@ -31,10 +31,10 @@ from one of the [demos](#demos).
 
 ## Demos
 
-Each link (`?demo=ID`) loads a scenario and shows the whole diagram; above
-it, a box explains what the demo shows with the text below, in English or
-Spanish as the UI. ⏮ and ▶ play it, and clicking an arrow loses or
-delivers it. The links point to the published app; to try local changes,
+Each link (`?demo=ID`) loads a scenario ready to play from the start;
+above it, a box explains what the demo shows with the text below, in
+English or Spanish as the UI. ▶ plays it, ⏭ jumps to the end, and clicking
+an arrow loses or delivers it. The links point to the published app; to try local changes,
 serve the repository (see [Running locally](#running-locally)) and use
 <http://localhost:8765/?demo=ID> instead.
 
