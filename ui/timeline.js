@@ -56,13 +56,14 @@ export function renderTimeline(trace, now, protocol) {
     const [y1, y2] = rawEnds(tx);
     return Math.min(ACK_GAP, (y2 - y1) / 2);
   };
-  const cols = W === 1 ? 1 : M <= 8 ? M : W;
+  // One timer column per sequence number (or per window slot with many),
+  // so different timers never share a column at the same time.
+  const cols = M <= 8 ? M : W;
   const COL = Math.min(20, 200 / cols);   // gap between timer columns
   const rowWidth = boxCount(trace.params) * BOX;
 
-  // Sender lines. «timeout!» only with a single timer column (stop-and-wait),
-  // as in its figure.
-  const expiredAt = new Set(cols === 1
+  // Sender lines. «timeout!» only in stop-and-wait, as in its figure.
+  const expiredAt = new Set(W === 1
     ? trace.timers.filter(tm => tm.end === 'expire').map(tm => tm.tEnd) : []);
   const data = trace.transmissions.filter(tx => tx.kind === 'data').map(tx => ({
     tx,
@@ -132,22 +133,24 @@ export function renderTimeline(trace, now, protocol) {
       + `Δt = ${+(b.t1 - b.t0).toPrecision(4)}<title>${t('gap.title')}</title></text>`);
   }
 
-  // Timers. If one starts where another has just been cancelled
-  // (stop-and-wait), it is shifted down so the clocks do not overlap.
-  const ends = new Set(trace.timers.filter(tm => tm.end === 'cancel')
-    .map(tm => `${timerX(tm.abs)},${tm.tEnd}`));
+  // Timers. A start clock stays at the height of its message. If a timer is
+  // cancelled where another one starts in the same column (messages N and
+  // N + 2^k), the cancel clock is shifted up so the clocks do not overlap.
+  const starts = new Set(trace.timers.filter(tm => !tm.afterExpire)
+    .map(tm => `${timerX(tm.abs)},${tm.tStart}`));
   // Lines first, so that no line crosses a clock.
   const timerLines = [], clocks = [];
   for (const tm of trace.timers) {
     if (tm.tStart > now) continue;
     const x = timerX(tm.abs);
-    const y0 = y(tm.tStart) + (ends.has(`${x},${tm.tStart}`) ? 15 : 0);
-    const shownEnd = Math.min(now, tm.tEnd ?? trace.end);
-    if (shownEnd > tm.tStart)
-      timerLines.push(`<line class="timer-line" x1="${x}" y1="${y0}" x2="${x}" y2="${y(shownEnd)}"/>`);
+    const y0 = y(tm.tStart);
+    const done = tm.tEnd != null && tm.tEnd <= now;
+    const yEnd = done && tm.end === 'cancel' && starts.has(`${x},${tm.tEnd}`)
+      ? y(tm.tEnd) - 15 : y(Math.min(now, tm.tEnd ?? trace.end));
+    if (yEnd > y0)
+      timerLines.push(`<line class="timer-line" x1="${x}" y1="${y0}" x2="${x}" y2="${yEnd}"/>`);
     if (!tm.afterExpire) clocks.push(clock(x, y0, tm.restarted ? 'restart' : 'start'));
-    if (tm.tEnd != null && tm.tEnd <= now && tm.end !== 'restart')
-      clocks.push(clock(x, y(tm.tEnd), tm.end));
+    if (done && tm.end !== 'restart') clocks.push(clock(x, yEnd, tm.end));
   }
   out.push(...timerLines, ...clocks);
 

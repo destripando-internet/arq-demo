@@ -39,8 +39,8 @@ Inkscape:
   have neutral names.
 - Receiver notes in bold at the end of the ACK line (discarded, duplicate!,
   buffered); failures in red.
-- `timeout!` in bold before the retransmission label, only when there is a
-  single timer column (stop-and-wait, as in its figure). In go-back-N the
+- `timeout!` in bold before the retransmission label, only in
+  stop-and-wait, as in its figure. In go-back-N the
   red clock is enough, as in the figure.
 - «endless loop» in red at the sender, when the simulation stops on a
   loop.
@@ -117,14 +117,18 @@ Inkscape:
 - With many timer columns their spacing shrinks (at most 200 px in all).
 - Label widths are measured with a canvas (`measureText`) to align the
   buffer column.
-- Timer columns next to the sender axis: 1 if W = 1; M if M ≤ 8 (each
-  sequence number in its own column, as in the figure); W otherwise.
+- Timer columns next to the sender axis: M if M ≤ 8 (each sequence number
+  in its own column, as in the go-back-n figure), W otherwise. Stop-and-wait
+  has two columns, for 0 and 1: its figure uses one, but then the timer of
+  the next message starts where the previous one is cancelled and one of
+  the clocks had to move away from its message.
 - The left margin depends on whichever is wider (label or buffer row) plus
   the timer columns. With a fixed margin, the k=3 buffer went off the left
   edge.
-- In stop-and-wait, a timer is cancelled and the next one starts at the
-  same instant and column: the green clock is shifted 15 px down so they do
-  not overlap.
+- A start clock always stays at the height of its message. In the rare
+  case that a timer is cancelled where another one starts in the same column
+  (messages N and N + 2^k with a large window), the cancel clock is shifted
+  15 px up.
 
 ## Timings that reproduce the figures
 
