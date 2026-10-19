@@ -273,7 +273,7 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
   .tcell.pulse, .tcell.pulse::after { animation: none; }
 }
 
-/* Box of a demo loaded from DEMOS.md */
+/* Box of a demo loaded with ?demo=ID */
 .demo {
   margin-bottom: 12px;
   padding: 10px 14px;

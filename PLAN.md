@@ -191,8 +191,8 @@ installed.
   ACKs, receive buffer in the diagram); configurable Ttrans and Tprop, with
   the channel occupancy drawn as bands; constraints and utilisation panel
   (theoretical and measured); go-back-N with individual ACKs as a
-  counter-example; tests runnable in the browser; a link per case in
-  [DEMOS.md](DEMOS.md).
+  counter-example; tests runnable in the browser; a link per case, now in
+  the [README](README.md#demos).
 - v2 (2026-10-18): English/Spanish UI; Bootstrap controls in two groups
   (algorithm and scenario); link presets (book figures, LAN, fibre,
   satellite) with «custom» when edited; endless-loop detection; labels on

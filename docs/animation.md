@@ -244,14 +244,13 @@ http.server 8765`):
 
 `t=end` shows the whole scenario; `t=8.4` stops it half-way, with messages
 in flight. `--dump-dom` instead of `--screenshot` gives the HTML, which is
-how the links in DEMOS.md and the browser tests can be checked from a
-script.
+how the demo links and the browser tests can be checked from a script.
 
 ## Protocol decisions
 
 The book's text was checked against the simulation and the general theory
 (Tanenbaum, protocols 5 and 6; Kurose and Ross, GBN and SR). The cases are
-in [DEMOS.md](../DEMOS.md).
+the [demos](../README.md#demos).
 
 1. **Go-back-N: cumulative ACKs.** The receiver only confirms the last
    in-order message. If the sender reads that ACK as confirming a single

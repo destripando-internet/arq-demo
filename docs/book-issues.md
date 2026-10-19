@@ -7,7 +7,7 @@ Kurose and Ross, rdt, GBN and SR).
 Numbers are stable so they can be cited: fixed issues stay in the list,
 marked as fixed, and new ones are appended. Line numbers refer to
 `book/reliability.tex` after the fixes of 2026-10-18 and may drift. Case IDs
-(S1, G2…) refer to [DEMOS.md](../DEMOS.md).
+(S1, G2…) refer to the [demos](../README.md#demos).
 
 | Issue | Status |
 |---|---|

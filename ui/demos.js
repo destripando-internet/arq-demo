@@ -1,9 +1,8 @@
-// Catalogue of the demos listed in DEMOS.md: ?demo=ID loads the scenario and
+// Catalogue of the demos listed in README.md: ?demo=ID loads the scenario and
 // shows what it demonstrates. Texts are for students: each one stands alone
 // (never «the same loss as…», since a demo may be the only one they open)
 // and never mentions the book. Numbers use a decimal point, as the rest of
-// the UI. DEMOS.md repeats the English titles and texts, and README.md the
-// English titles: keep them in sync.
+// the UI. README.md repeats the English titles and texts: keep both in sync.
 
 export const DEMOS = [
   {
