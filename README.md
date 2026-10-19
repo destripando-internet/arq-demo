@@ -6,7 +6,9 @@ book.
 
 HTML + JavaScript (ES modules) + SVG, with no build step. Bootstrap 5 and
 Bootstrap Icons (CSS only) are loaded from the jsDelivr CDN; there are no
-other dependencies. It is published as is on GitHub Pages. The user
+other dependencies. It is published as is on GitHub Pages, from the
+`master` branch, root folder: <https://destripando-internet.github.io/arq-demo/>
+(`.nojekyll` makes Pages serve the files without processing them). The user
 interface is in English and Spanish (ES/EN switch); code, comments and
 documentation are in English.
 

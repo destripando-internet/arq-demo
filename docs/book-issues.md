@@ -38,7 +38,7 @@ take it as that message's ACK even if that message was lost. Case S2.
 it was only said later, in «Confirmación acumulativa». Added, with the
 reason: the receiver only confirms the last in-order message, so with
 individual ACKs losing one ACK makes the sender retransmit forever. Cases
-G2–G5.
+G2 and G3.
 
 **E4 · lines 121 and 148 · fixed.** It was not said what is retransmitted
 when a timer expires. Added after the receiver paragraph: each message has
@@ -72,7 +72,8 @@ mensajes fuera de secuencia» and «confirmaciones duplicadas ack 2» describe
 cumulative ACKs. They contradict line 360 («cada confirmación se refiere a
 un único mensaje») and the goal in line 178 (not retransmitting messages
 that arrived): with cumulative ACKs the sender cannot know which messages
-were buffered and retransmits them. Cases R1 and R2.
+were buffered and retransmits them. Case R1; for the drawback of
+cumulative ACKs, case C1.
 
 Proposed structure:
 
@@ -121,7 +122,7 @@ Consistent versions, with Ttrans = Tprop = 1 and a timer of 7:
   2, 4, 5, 6 leave at t = 2, 3, 5, 6, 7; timers 0, 1, 3, 4, 5 are cancelled
   by them. Timer 2 expires at t = 9 and only 2 is retransmitted; it arrives
   at t = 11, the receiver delivers 2–5 and answers ack 3.
-- **Cumulative ACKs** (R2). ACKs 1, 2, 2, 2, 2. Timers 2, 3 and 4 expire at
+- **Cumulative ACKs** (R1 with «ACKs» set to cumulative). ACKs 1, 2, 2, 2, 2. Timers 2, 3 and 4 expire at
   t = 9, 10 and 11 and those messages are retransmitted; RTX 2 arrives at
   t = 11, the receiver delivers 2–5 and answers ack 6, which reaches the
   sender at t = 12 and cancels every timer; RTX 3 and 4 are duplicates and
@@ -133,7 +134,8 @@ Consistent versions, with Ttrans = Tprop = 1 and a timer of 7:
 receptor los confirma uno a uno» matches neither the figure (it retransmits
 2–4) nor any consistent version: with individual ACKs only 2 is retransmitted
 and confirmed with ack 3 (R1); with cumulative ACKs 2, 3, 4 (and maybe 5)
-are retransmitted and all of them get ack 6, not one by one (R2).
+are retransmitted and all of them get ack 6, not one by one (R1 with
+cumulative ACKs).
 
 **E11 · line 180 · fixed.** The commented-out sentence (the receiver
 confirms again a message it already had) is needed: with individual ACKs,
@@ -157,7 +159,8 @@ ack 4, an unnecessary retransmission of 3 and ack 4 cancelling the timers of
 t = 9 and RTX 3 at t = 10; ACKs 1 2 2 4 4; ack 4 reaches the sender at
 t = 12). But the figure it cites has 6 messages, and its timers and ACKs
 are those of E9. Options: draw a 4-message figure for this example (C1) and
-keep the text, or reuse a corrected 6-message figure (R2) and rewrite the
+keep the text, or reuse a corrected 6-message figure (R1 with cumulative
+ACKs) and rewrite the
 text with ack 6. With the structure proposed in E8, the first option keeps
 both texts as they are.
 

@@ -62,14 +62,6 @@ export const DEMOS = [
     },
   },
   {
-    id: 'G5', query: 'p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&ack=individual&l=a1,a2,a3&t=end',
-    title: { en: 'Every ACK lost, individual ACKs', es: 'Se pierden todos los ACK, confirmación individual' },
-    text: {
-      en: 'Ws = 3 = 2^k − 1, the first three ACKs are lost and the sender reads each ACK as confirming a single message. The receiver answers the retransmissions with ack 3 (the next one it expects), which only confirms 2: 0 and 1 are never confirmed and would be retransmitted forever, although the window is valid.',
-      es: 'Ws = 3 = 2^k − 1, se pierden las tres primeras confirmaciones y el emisor interpreta cada ACK como confirmación de un único mensaje. El receptor responde a las retransmisiones con ack 3 (el siguiente que espera), que solo confirma el 2: el 0 y el 1 nunca quedan confirmados y se retransmitirían sin fin, aunque la ventana es válida.',
-    },
-  },
-  {
     id: 'G6', query: 'p=gbn&k=2&w=4&n=5&tt=1&d=1&to=6&l=a1,a2,a3,a4&t=end',
     title: { en: 'Go-back-N: window too large', es: 'Repetición continua: ventana demasiado grande' },
     text: {
@@ -83,14 +75,6 @@ export const DEMOS = [
     text: {
       en: 'Message 2 is lost. The receiver keeps 3, 4 and 5 (violet) and confirms each one, so the sender cancels their timers. When the timer of 2 expires, only 2 is retransmitted; when it arrives, the receiver delivers 2 to 5.',
       es: 'Se pierde el mensaje 2. El receptor guarda el 3, el 4 y el 5 (violeta) y confirma cada uno, así que el emisor cancela sus temporizadores. Cuando expira el del 2, solo se retransmite el 2; al llegar, el receptor entrega del 2 al 5.',
-    },
-  },
-  {
-    id: 'R2', query: 'p=sr&k=3&w=4&n=6&tt=1&d=1&to=7&ack=cumulative&l=d2.1&t=end',
-    title: { en: 'Selective repeat with cumulative ACKs', es: 'Repetición selectiva con confirmación acumulativa' },
-    text: {
-      en: 'Message 2 is lost and ACKs are cumulative. The receiver keeps 3, 4 and 5, but while 2 is missing it can only answer ack 2, which has no effect. The sender does not know they arrived and, as their timers expire, retransmits 2, 3 and 4. That is the drawback of cumulative ACKs in selective repeat.',
-      es: 'Se pierde el mensaje 2 y la confirmación es acumulativa. El receptor guarda el 3, el 4 y el 5, pero mientras falta el 2 solo puede responder ack 2, que no tiene efecto. El emisor no sabe que llegaron y, al expirar sus temporizadores, retransmite el 2, el 3 y el 4. Es el inconveniente de la confirmación acumulativa en repetición selectiva.',
     },
   },
   {
@@ -150,11 +134,11 @@ export const DEMOS = [
     },
   },
   {
-    id: 'B3', query: 'p=gbn&k=3&w=3&n=21&tt=0.5&d=1&to=5&t=end',
-    title: { en: 'Utilisation depends on a, not on each delay', es: 'El aprovechamiento depende de a, no de cada retardo' },
+    id: 'B3', query: 'p=gbn&k=5&w=26&n=40&tt=0.4&d=5&to=15&t=end',
+    title: { en: 'Message size does not change the bandwidth × delay product', es: 'El tamaño del mensaje no cambia el producto ancho de banda × retardo' },
     text: {
-      en: 'Ttrans = 0.5 and Tprop = 1, so a = Tprop / Ttrans = 2, as with Ttrans = 1 and Tprop = 2. With Ws = 3 < 1 + 2a = 5 the utilisation is U = 3/5 = 0.6 either way: it depends on a, not on each delay.',
-      es: 'Ttrans = 0.5 y Tprop = 1, así que a = Tprop / Ttrans = 2, igual que con Ttrans = 1 y Tprop = 2. Con Ws = 3 < 1 + 2a = 5 el aprovechamiento es U = 3/5 = 0.6 en ambos casos: depende de a, no de cada retardo.',
+      en: 'Fibre, 1000 km, at R = 10 Mb/s with 500-byte messages (times in ms): Ttrans = 0.4 and Tprop = 5, so a = 12.5 and the window must hold 1 + 2a = 26 messages; with Ws = 26 the channel is full. With 1000-byte messages, a would be 6.25 and 14 messages would do. The data in flight is the same: BDP = R · 2·Tprop = 100 kbit = 12.5 KB, that is 25 messages of 500 bytes or 12.5 of 1000. It depends on the rate and the delay, not on the message size.',
+      es: 'Fibra de 1000 km a R = 10 Mb/s con mensajes de 500 bytes (tiempos en ms): Ttrans = 0.4 y Tprop = 5, así que a = 12.5 y en la ventana deben caber 1 + 2a = 26 mensajes; con Ws = 26 el canal se llena. Con mensajes de 1000 bytes, a sería 6.25 y bastarían 14. Los datos en vuelo son los mismos: BDP = R · 2·Tprop = 100 kbit = 12.5 KB, es decir, 25 mensajes de 500 bytes o 12.5 de 1000. Depende de la velocidad y del retardo, no del tamaño del mensaje.',
     },
   },
   {
