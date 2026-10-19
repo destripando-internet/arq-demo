@@ -50,10 +50,13 @@ Inkscape:
 - Timers: green clock when started, dashed line while running, red clock
   with «bells» when it expires and white crossed-out clock when cancelled.
   After expiring and retransmitting, the line goes on **without** a new
-  green clock (as in the go-back-n figure). When a timer is restarted
-  because its message is retransmitted while going back N, the line reaches
-  the retransmission and the restart icon appears there: a white clock with
-  a circular arrow, as in the book's icon set (`figures/0-styles.svg`).
+  green clock (as in the go-back-n figure). When a message is retransmitted
+  while going back N, its timer restarts; if that happens exactly when the
+  timer was due (messages sent back to back, as in the go-back-n figure),
+  it is a timeout and is drawn as one: red clock, and the line goes on.
+  Only a timer retransmitted before it was due shows the restart icon: a
+  white clock with a circular arrow, as in the book's icon set
+  (`figures/0-styles.svg`).
   Clocks are drawn after all the lines, so no line crosses them.
 - Send buffer (only with a window > 1): left of each `data N`, M+1 cells
   starting at `base − 1`, the window framed in orange. In the window: sent
@@ -137,8 +140,8 @@ Inkscape:
   figures (checked by the tests), but not the exact positions: e.g. in
   go-back-n the buffer of `[RTX] mensaje 2` shows `0 [1 2 3] 0` and the
   figure `1 [2 3 0] 1`, because there ack 2 arrives before that
-  retransmission. The timers of 2 and 3 restart instead of expiring
-  (book issue E5).
+  retransmission. The timers of 2 and 3 expire just as they are
+  retransmitted, as in the figure.
 - The selective-repeat figure cannot be reproduced (book issue E9).
 
 ## Order of simultaneous events
@@ -235,7 +238,10 @@ in [DEMOS.md](../DEMOS.md).
 2. **One timer per message.** In go-back-N, when one expires, that message
    and every later one already sent are retransmitted (hence the name).
    Every transmission starts the timer of its message, so the timers of the
-   later ones restart: the expiry does not touch other timers directly. This
+   later ones restart: the expiry does not touch other timers directly.
+   When the later messages were sent back to back, their timers are due
+   exactly when their retransmissions leave, so they are drawn as expired;
+   only one retransmitted before it was due shows the restart icon. This
    is Tanenbaum's protocol 5 (one logical timer per frame; on a timeout all
    outstanding frames are sent again, each with `start_timer`); Kurose and
    Ross use a single timer for the oldest unconfirmed packet, restarted on

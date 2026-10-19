@@ -149,16 +149,20 @@ export function simulate(protocol, opts = {}) {
     },
 
     startTimer(abs, from) {
-      // On restart, the old timer's line reaches the new start.
+      // On restart, the old timer's line reaches the new start. If the old
+      // timer was due right then, it is a timeout that coincides with the
+      // retransmission (going back N after back-to-back messages): it is
+      // drawn as expired, not as restarted.
       const running = timers.get(abs);
-      stopTimer(abs, 'restart');
+      const due = running && instant(running.rec.tStart + p.timeout) <= from;
+      stopTimer(abs, due ? 'expire' : 'restart');
       if (running) running.rec.tEnd = from;
       const prev = lastTimer.get(abs);
       const rec = {
         abs, tStart: from, tEnd: null, end: null,
-        restarted: !!running,  // it replaces a timer that was still running
+        restarted: !!running && !due,  // replaces a timer before it was due
         // continuation of a timer that has just expired
-        afterExpire: prev?.end === 'expire' && prev.tEnd === engine.now(),
+        afterExpire: prev?.end === 'expire' && prev.tEnd === from,
       };
       lastTimer.set(abs, rec);
       trace.timers.push(rec);

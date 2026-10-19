@@ -40,8 +40,9 @@ already sent are retransmitted (each message has its own timer).
 
 - **G1** [Figure `go-back-n`](http://localhost:8765/?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&l=d1.1&t=end).
   Same messages and ACKs as the figure. When the timer of 1 expires, 1, 2
-  and 3 are retransmitted, so the timers of 2 and 3 restart (green clock),
-  as in the corrected figure (E4, E5).
+  and 3 are retransmitted. 2 and 3 were sent back to back, so their timers
+  expire just as they are retransmitted (red clocks), as in the book's
+  original figure (E5).
 - **G2** [An ACK is lost](http://localhost:8765/?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&l=a1&t=end).
   Ack 2 confirms 0 and 1: no retransmission at all.
 - **G3** [An ACK is lost, individual ACKs](http://localhost:8765/?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&ack=individual&l=a1&t=end).

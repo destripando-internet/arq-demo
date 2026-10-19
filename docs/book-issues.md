@@ -11,7 +11,8 @@ marked as fixed, and new ones are appended. Line numbers refer to
 
 | Issue | Status |
 |---|---|
-| E1–E7, E9–E13, E16–E18 | fixed |
+| E1–E4, E6, E7, E9–E13, E16–E18 | fixed |
+| E5 | reopened: the original figure was right, revert pending decision |
 | E8 | proposal, pending decision |
 | E14, E15 | postponed |
 | E19, E20 | pending |
@@ -47,10 +48,15 @@ transmission restarts the timer of its message, the timers of the later ones
 restart instead of expiring (Tanenbaum, protocol 5). The example of the
 figure (line 148) now says so too.
 
-**E5 · figure go-back-n · fixed.** The timers of messages 2 and 3 were
-drawn expiring (red clocks). They now show the restart icon of the book's
-icon set (`0-styles.svg`: clock with a circular arrow) at their
-retransmission. Case G1.
+**E5 · figure go-back-n · reopened (2026-10-19).** The timers of messages 2
+and 3 were drawn expiring (red clocks), and E5 replaced them with the
+restart icon of the book's icon set (`0-styles.svg`). That was wrong: 2 and
+3 were sent back to back after 1, so each timer is due exactly when its
+retransmission leaves (2 at t = 8, 3 at t = 9). That is a timeout, and the
+original red clocks were right. The figure should be reverted. The text of
+E4 (line 121: «los temporizadores de esos mensajes posteriores se
+reinician en lugar de expirar») is right in general but not for this
+figure; it may need «si no han vencido ya». Case G1.
 
 **E6 · line 144 · fixed.** «utiliza una ventana de $k=2 bits$»: k = 2 is the
 size of the sequence number, not of the window. Now «utiliza números de
@@ -187,8 +193,8 @@ example (line 380), the same mistake as E6.
 
 ## Pending
 
-**E19 · other diagrams · pending.** E4/E5 change how go-back-N timers behave
-(the later timers restart instead of expiring). Any other diagram of the
+**E19 · other diagrams · pending.** E4 describes how go-back-N timers behave
+(the later timers restart, or expire if they were due at that instant). Any other diagram of the
 book or of the course slides that shows go-back-N timers should be reviewed.
 
 **E20 · colours of the buffers · pending decision.** The demo now uses its

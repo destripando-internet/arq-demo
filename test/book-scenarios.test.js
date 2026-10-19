@@ -37,9 +37,19 @@ test('go-back-N reproduces the go-back-n figure', () => {
   assert.deepEqual(seqs(trace, 'ack'), [1, 1, 1, 2, 3, 0]);
   assert.deepEqual(trace.notes.map(n => n.text), ['discarded', 'discarded']);
   assert.deepEqual(delivered(trace), [0, 1, 2, 3]);
-  // When timer 1 expires, 2 and 3 are retransmitted too and their timers
-  // restart instead of expiring.
+  // When timer 1 expires, 2 and 3 are retransmitted too. They were sent
+  // back to back, so their timers expire just as they are retransmitted, as
+  // the figure draws them.
+  assert.deepEqual(expired(trace), [1, 2, 3]);
+  assert.ok(trace.timers.every(tm => !tm.restarted));
+});
+
+test('go-back-N: a timer retransmitted before it is due restarts', () => {
+  // Window 2: message 2 leaves at t = 3, when the ACK of 0 arrives. Timer 1
+  // expires at 7 and 2 is retransmitted at 8, before its timer is due (9).
+  const trace = simulate(goBackN, { k: 2, window: 2, count: 3, timeout: 6, forcedLosses: ['d1.1'] });
   assert.deepEqual(expired(trace), [1]);
+  assert.deepEqual(trace.timers.filter(tm => tm.restarted).map(tm => [tm.abs, tm.tStart]), [[2, 8]]);
 });
 
 test('go-back-N: losing an ACK causes no retransmission', () => {
@@ -131,10 +141,13 @@ test('no losses, no retransmissions', () => {
   }
 });
 
-test('go-back-N: going back restarts the later timers, also with decimal delays', () => {
-  // Each later timer would expire just when the link is free to resend its
-  // message; with Ttrans = 0.8, floating point used to put the expiry first.
+test('go-back-N: each later timer expires as its retransmission leaves, also with decimal delays', () => {
+  // With Ttrans = 0.8, floating point used to put the expiry a moment
+  // before the retransmission, and both were drawn.
   const trace = simulate(goBackN, { k: 4, window: 14, count: 12, tTrans: 0.8, tProp: 5, timeout: 11, forcedLosses: ['d0.1'] });
-  const expired = trace.timers.filter(tm => tm.end === 'expire').map(tm => tm.abs);
-  assert.deepEqual(expired, [0]);
+  const rtx = new Map(trace.transmissions.filter(tx => tx.rtx).map(tx => [tx.abs, tx.tDep]));
+  const expiries = trace.timers.filter(tm => tm.end === 'expire');
+  assert.deepEqual(expiries.map(tm => tm.abs), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+  assert.ok(expiries.every(tm => tm.tEnd === rtx.get(tm.abs)));
+  assert.ok(trace.timers.every(tm => !tm.restarted));
 });
