@@ -34,7 +34,7 @@
     import { run } from './runner.js';
 
     // Add every new file in test/ here.
-    const FILES = ['book-scenarios', 'analysis', 'timescale', 'timeline'];
+    const FILES = ['book-scenarios', 'analysis', 'timescale', 'timeline', 'demos'];
 
     for (const name of FILES) await import(`../test/${name}.test.js`);
     const results = await run();

@@ -1,55 +1,55 @@
 # Cases to study with the demo
 
-One link per case, grouped by section of the chapter «Confiabilidad y control de flujo» (`reliability.tex`). IDs are stable so they can be cited: new cases are appended to their section. Book issues (E1, E2…) are listed in [docs/book-issues.md](docs/book-issues.md).
+One link per case, grouped by topic. IDs are stable so they can be cited: new cases are appended to their section.
 
-Every link opens the whole diagram (`t=end`); ⏮ and ▶ play it. Clicking an arrow loses or delivers it. The links point to a local server on port 8765:
+Each link (`?demo=ID`) loads the scenario and shows the whole diagram; above it, a box explains what the demo shows with the text below, in English or Spanish as the UI. ⏮ and ▶ play it, and clicking an arrow loses or delivers it. The scenarios and texts are in [ui/demos.js](ui/demos.js); `test/demos.test.js` checks that every demo does what its text says. The links point to a local server on port 8765:
 
     python3 -m http.server 8765
 
 Tests run in the browser at <http://localhost:8765/test-web/>.
 
-Conventions: an ACK carries the number of the confirmed message + 1 (with cumulative ACKs, the next expected one). ACKs have no transmission delay. Times are abstract units, except with the real link presets (ms). The UI is in English or Spanish (ES/EN switch, or `&lang=es` / `&lang=en` in the link); the «Guide» tab explains the legend, the constraints and the utilisation.
+Conventions: an ACK carries the number of the confirmed message + 1 (with cumulative ACKs, the next expected one). ACKs have no transmission delay. Times are abstract units, except with the real link presets (ms). The «Guide» tab explains the legend, the constraints and the utilisation.
 
 ## Stop-and-wait
 
-- **S1** [Figure `stop-and-wait`](http://localhost:8765/?p=saw&n=3&tt=1&d=1&to=5&l=d1.1,a3&t=end). Message 1 is lost (its timer expires and it is retransmitted), then the ack 1 of the second message 0: the receiver gets a duplicate, discards it and **confirms** it. Matches the figure (E1).
-- **S2** [Timer shorter than the RTT](http://localhost:8765/?p=saw&n=3&tt=1&d=1&to=2&t=end). ⚠ on the timer. Nothing is lost, but every message is retransmitted before its ACK arrives; the receiver discards and confirms the duplicates and the sender ignores repeated ACKs because they carry a number (E2). It finishes, with twice as many transmissions.
-- **S3** [Stop-and-wait utilisation](http://localhost:8765/?p=saw&n=6&tt=1&d=2&to=7&t=end). a = 2, U = 1 / (1 + 2a) = 0.2: the channel is busy a fifth of the time.
+- **S1** [Lost message and lost ACK](http://localhost:8765/?demo=S1). Message 1 is lost: its timer expires and the sender retransmits it. Then the ACK of the second message 0 is lost, so the sender retransmits that one too and the receiver gets a duplicate. It discards it but confirms it anyway; otherwise the sender would retransmit it forever.
+- **S2** [Timer shorter than the RTT](http://localhost:8765/?demo=S2). The timer (2) is shorter than the RTT (3). Nothing is lost, but every message is retransmitted before its ACK can arrive. The receiver discards and confirms the duplicates, and the sender ignores the repeated ACKs (dashed) thanks to their number. It works, with twice as many transmissions.
+- **S3** [Stop-and-wait utilisation](http://localhost:8765/?demo=S3). With a = Tprop / Ttrans = 2, the sender spends most of the time waiting for ACKs: U = 1 / (1 + 2a) = 0.2. The channel is busy only a fifth of the time (the grey bands).
 
 ## Go-back-N
 
 Cumulative ACKs; when a timer expires, that message and every later one already sent are retransmitted (each message has its own timer).
 
-- **G1** [Figure `go-back-n`](http://localhost:8765/?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&l=d1.1&t=end). Same messages and ACKs as the figure. When the timer of 1 expires, 1, 2 and 3 are retransmitted. 2 and 3 were sent back to back, so their timers expire just as they are retransmitted (red clocks), as in the book's original figure (E5).
-- **G2** [An ACK is lost](http://localhost:8765/?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&l=a1&t=end). Ack 2 confirms 0 and 1: no retransmission at all.
-- **G3** [An ACK is lost, individual ACKs](http://localhost:8765/?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&ack=individual&l=a1&t=end). ✗ on «ACKs». Same scenario as G2, but the sender reads ack n as confirming only n−1. The receiver answers the retransmission of 0 with ack 3 (the next expected one), so 0 is never confirmed and 3 is never sent. When the timer of 0 expires again with nothing in flight and nothing changed, the demo reports an endless loop and stops (E3).
-- **G4** [Ambiguity example with Ws = 2^k − 1](http://localhost:8765/?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&l=a1,a2,a3&t=end). Every ACK is lost. The receiver recognises the retransmissions as duplicates, answers ack 3 and that confirms everything.
-- **G5** [Ambiguity example with Ws = 2^k − 1, individual ACKs](http://localhost:8765/?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&ack=individual&l=a1,a2,a3&t=end). ✗ on «ACKs». Ack 3 only confirms 2; 0 and 1 would be retransmitted forever even though the window is valid: endless loop (E3).
-- **G6** [Ambiguity example with Ws = 2^k](http://localhost:8765/?p=gbn&k=2&w=4&n=5&tt=1&d=1&to=6&l=a1,a2,a3,a4&t=end). ✗ Window too large. The book's example: the retransmission of 0 is delivered as a new message.
+- **G1** [Go-back-N: a lost message](http://localhost:8765/?demo=G1). Message 1 is lost. The receiver only accepts messages in order, so it discards 2 and 3 and answers with duplicate ACKs 1, which have no effect. When the timer of 1 expires, the sender goes back and retransmits 1, 2 and 3: hence the name of the protocol.
+- **G2** [Go-back-N: a lost ACK](http://localhost:8765/?demo=G2). The ACK of message 0 is lost. Nothing happens: ACKs are cumulative, so ack 2 confirms 0 and 1 at once and nothing is retransmitted.
+- **G3** [Go-back-N without cumulative ACKs](http://localhost:8765/?demo=G3). The ACK of message 0 is lost, and the sender reads each ACK as confirming a single message. The receiver answers the retransmission of 0 with ack 3 (the next one it expects), so 0 is never confirmed and the sender would retransmit it forever. That is why go-back-N needs cumulative ACKs.
+- **G4** [Largest window: no ambiguity](http://localhost:8765/?demo=G4). Ws = 3 = 2^k − 1 and the first three ACKs are lost, so the sender retransmits 0, 1 and 2. The receiver, which expects 3, correctly recognises the retransmissions as duplicates: with this window none of them can have the number of the next message it expects. It discards them and answers ack 3, which confirms everything.
+- **G5** [Every ACK lost, individual ACKs](http://localhost:8765/?demo=G5). Ws = 3 = 2^k − 1, the first three ACKs are lost and the sender reads each ACK as confirming a single message. The receiver answers the retransmissions with ack 3 (the next one it expects), which only confirms 2: 0 and 1 are never confirmed and would be retransmitted forever, although the window is valid.
+- **G6** [Go-back-N: window too large](http://localhost:8765/?demo=G6). Ws = 4 = 2^k. The four ACKs are lost and the retransmission of 0 arrives when the receiver expects the next message numbered 0: it takes it as new and delivers it. That is why the window must satisfy Ws ≤ 2^k − 1.
 
 ## Selective repeat
 
 Individual ACKs by default; cumulative ACKs are an option («ACKs»). When a timer expires, only that message is retransmitted.
 
-- **R1** [Figure `selective-repeat` with individual ACKs](http://localhost:8765/?p=sr&k=3&w=4&n=6&tt=1&d=1&to=7&ack=individual&l=d2.1&t=end). ACKs 1 2 4 5 6 3 and only 2 is retransmitted, as in the corrected figure (E9, E10).
-- **R2** [Figure `selective-repeat` with cumulative ACKs](http://localhost:8765/?p=sr&k=3&w=4&n=6&tt=1&d=1&to=7&ack=cumulative&l=d2.1&t=end). ACKs 1 2 2 2 2 6 6 6 and 2, 3 and 4 are retransmitted, although they were already in the receiver's buffer: the drawback of cumulative ACKs. (Ack 6 arrives just when the timer of 5 would expire, so 5 is spared.)
-- **R3** [An ACK is lost, individual ACKs](http://localhost:8765/?p=sr&k=3&w=4&n=6&tt=1&d=1&to=7&ack=individual&l=a2&t=end). The timer of 1 expires and 1 is retransmitted; the receiver had already delivered it, marks it as a duplicate and **confirms it again** (E11).
-- **R4** [An ACK is lost, cumulative ACKs](http://localhost:8765/?p=sr&k=3&w=4&n=6&tt=1&d=1&to=7&ack=cumulative&l=a2&t=end). Ack 3 covers 1: no retransmission.
-- **R5** [Maximum window W = 2^(k−1), every ACK lost](http://localhost:8765/?p=sr&k=3&w=4&n=8&tt=1&d=1&to=7&ack=individual&l=a1,a2,a3,a4&t=end). The retransmissions fall outside the receive window: duplicates.
-- **R6** [Window W = 2^(k−1) + 1, every ACK lost](http://localhost:8765/?p=sr&k=3&w=5&n=10&tt=1&d=1&to=7&ack=individual&l=a1,a2,a3,a4,a5&t=end). ✗ Window too large: the retransmission of 0 falls inside the new receive window and is delivered as a new message.
+- **R1** [Selective repeat: a lost message](http://localhost:8765/?demo=R1). Message 2 is lost. The receiver keeps 3, 4 and 5 (violet) and confirms each one, so the sender cancels their timers. When the timer of 2 expires, only 2 is retransmitted; when it arrives, the receiver delivers 2 to 5.
+- **R2** [Selective repeat with cumulative ACKs](http://localhost:8765/?demo=R2). Message 2 is lost and ACKs are cumulative. The receiver keeps 3, 4 and 5, but while 2 is missing it can only answer ack 2, which has no effect. The sender does not know they arrived and, as their timers expire, retransmits 2, 3 and 4. That is the drawback of cumulative ACKs in selective repeat.
+- **R3** [Selective repeat: a lost ACK](http://localhost:8765/?demo=R3). The ACK of message 1 is lost. Its timer expires and the sender retransmits it; the receiver had already delivered it, marks it as a duplicate and confirms it again. Without that new ACK, the sender would retransmit it forever.
+- **R4** [Selective repeat: a lost cumulative ACK](http://localhost:8765/?demo=R4). The ACK of message 1 is lost, but ACKs are cumulative: the next one, ack 3, also confirms 1, so nothing is retransmitted.
+- **R5** [Selective repeat: largest window](http://localhost:8765/?demo=R5). W = 2^(k−1) = 4 and the first four ACKs are lost. The retransmissions fall outside the new receive window, so the receiver recognises them as duplicates and confirms them.
+- **R6** [Selective repeat: window too large](http://localhost:8765/?demo=R6). W = 5 > 2^(k−1). After the five ACKs are lost, the retransmission of 0 falls inside the new receive window and is delivered as a new message. That is why selective repeat needs W ≤ 2^(k−1).
 
 ## Cumulative ACKs
 
-- **C1** [Example in the text: messages 0–3, 2 is lost](http://localhost:8765/?p=sr&k=3&w=4&n=4&tt=1&d=1&to=7&ack=cumulative&l=d2.1&t=end). ACKs 1 2 2 4 4: after 2 is retransmitted, ack 4 confirms everything, but the timer of 3 had already expired and 3 is retransmitted needlessly. This is what the text narrates and what its new figure shows (E13).
+- **C1** [Cumulative ACKs: needless retransmission](http://localhost:8765/?demo=C1). Selective repeat with cumulative ACKs: four messages are sent and 2 is lost, so the receiver answers ack 1, 2 and 2. After 2 is retransmitted, ack 4 confirms everything, but the timer of 3 had already expired and 3 is retransmitted needlessly: the sender could not know it had arrived.
 
-## ARQ and bandwidth × delay
+## Bandwidth × delay
 
-- **B1** [Ws ≥ 1 + 2a: full channel](http://localhost:8765/?p=gbn&k=3&w=5&n=20&tt=1&d=2&to=10&t=end). a = 2, 1 + 2a = 5 = Ws: theoretical U = 1. The transmission bands touch each other, with no gaps.
-- **B2** [Ws < 1 + 2a](http://localhost:8765/?p=gbn&k=3&w=3&n=21&tt=1&d=2&to=10&t=end). ⚠ Small window. Theoretical U = 3/5 = 0.6: the sender sends its window and waits.
-- **B3** [Same a with other delays](http://localhost:8765/?p=gbn&k=3&w=3&n=21&tt=0.5&d=1&to=5&t=end). Ttrans and Tprop halved: same U, because it only depends on a.
-- **B4** [Fibre example, go-back-N](http://localhost:8765/?p=gbn&k=4&w=14&n=30&tt=0.8&d=5&to=15&t=end). Link «Fibre, 1000 km», in ms: Ttrans = 0.8, Tprop = 5, a = 6.25, 1 + 2a = 13.5 (shown next to the delays). With k = 4 and Ws = 14 ≤ 15, U = 1 (table `tab:bdp-k`).
-- **B5** [Fibre example, selective repeat with k = 4](http://localhost:8765/?p=sr&k=4&w=14&n=30&tt=0.8&d=5&to=15&ack=individual&l=a1&t=end). ✗ Window too large (maximum 8): k = 4 is not enough. Losing the first ACK is enough for the retransmission of 0 to be delivered as a new message.
-- **B6** [Fibre example, selective repeat with k = 5](http://localhost:8765/?p=sr&k=5&w=14&n=30&tt=0.8&d=5&to=15&ack=individual&l=a1&t=end). Ws = 14 ≤ 16, as the table says: the same loss is solved with one retransmission that the receiver recognises as a duplicate.
-- **B7** [LAN, stop-and-wait](http://localhost:8765/?p=saw&n=6&tt=0.8&d=0.0005&to=1&t=end). Link «LAN, 100 m copper»: a ≈ 0.0006, so U = 1 / (1 + 2a) ≈ 1. On a LAN stop-and-wait is enough; the window only matters when a is large.
-- **B8** [Satellite, stop-and-wait](http://localhost:8765/?p=saw&n=2&tt=0.8&d=250&to=600&t=end). Link «Geostationary satellite»: a = 312.5, U = 1/626 ≈ 0.16 %. The diagram is not to scale: the arrows keep the angle they have with a = 1 and the bands are hairlines, since transmitting takes almost no time.
-- **B9** [Satellite, go-back-N with the largest window of k = 5](http://localhost:8765/?p=gbn&k=5&w=31&n=40&tt=0.8&d=250&to=600&t=end). Ws = 31 is far from 1 + 2a = 626 (k = 10 in table `tab:bdp-k`): U ≈ 5 %.
+- **B1** [Window large enough: full channel](http://localhost:8765/?demo=B1). a = 2 and Ws = 5 = 1 + 2a: the ACKs arrive just in time and the sender never stops. The transmission bands touch each other: theoretical U = 1.
+- **B2** [Window too small](http://localhost:8765/?demo=B2). a = 2 and Ws = 3 < 1 + 2a = 5: the sender sends its window and waits for the first ACK. There are gaps between the bands: theoretical U = 3/5 = 0.6.
+- **B3** [Utilisation depends on a, not on each delay](http://localhost:8765/?demo=B3). Ttrans = 0.5 and Tprop = 1, so a = Tprop / Ttrans = 2, as with Ttrans = 1 and Tprop = 2. With Ws = 3 < 1 + 2a = 5 the utilisation is U = 3/5 = 0.6 either way: it depends on a, not on each delay.
+- **B4** [Fibre link, go-back-N](http://localhost:8765/?demo=B4). Fibre, 1000 km (times in ms): a = 6.25 and 1 + 2a = 13.5. With k = 4, go-back-N allows Ws = 14 ≤ 15 and the channel is fully used.
+- **B5** [Fibre link, selective repeat with k = 4](http://localhost:8765/?demo=B5). Fibre, 1000 km (times in ms), selective repeat with k = 4 and Ws = 14: the largest window is 2^(k−1) = 8, so Ws = 14 is not valid. Losing the first ACK is enough for the retransmission of 0 to be delivered as a new message.
+- **B6** [Fibre link, selective repeat with k = 5](http://localhost:8765/?demo=B6). Fibre, 1000 km (times in ms), selective repeat with k = 5 and Ws = 14 ≤ 2^(k−1) = 16: the window is valid. The first ACK is lost and 0 is retransmitted; the receiver correctly recognises the retransmission as a duplicate. For the same window, selective repeat needs one more bit than go-back-N.
+- **B7** [LAN, stop-and-wait](http://localhost:8765/?demo=B7). A 100 m LAN: a ≈ 0.0006, so U = 1 / (1 + 2a) ≈ 1. On a LAN stop-and-wait is enough; the window only matters when a is large.
+- **B8** [Satellite, stop-and-wait](http://localhost:8765/?demo=B8). Geostationary satellite: a = 312.5 and U = 1/626 ≈ 0.16 %. The sender transmits for 0.8 ms and then waits half a second for each message. Long waits are drawn compressed (Δt).
+- **B9** [Satellite, largest window with k = 5](http://localhost:8765/?demo=B9). Go-back-N with the largest window k = 5 allows, Ws = 31: still far from 1 + 2a = 626, so U ≈ 5 %. Filling the channel would take 10-bit sequence numbers.

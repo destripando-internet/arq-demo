@@ -7,6 +7,7 @@ import { timeScale } from './ui/timescale.js';
 import { renderState, progress, num } from './ui/state.js';
 import { renderGuide } from './ui/guide.js';
 import { LANGS, lang, setLang, t } from './ui/i18n.js';
+import { demoById } from './ui/demos.js';
 
 // Playback at 1×, in pixels of the diagram per second: an RTT takes 1.5 s
 // with a = 1. Slower for larger a, so a long propagation feels longer,
@@ -27,9 +28,12 @@ const langBar = document.getElementById('lang');
 const tabs = document.getElementById('tabs');
 const hint = document.getElementById('diagram-hint');
 const guide = document.getElementById('tab-guide');
+const demoBox = document.getElementById('demo');
 
 let protocol, trace, times, analysis, scale;
 let losses = new Map();  // key → true (lose) / false (deliver)
+let demo = null;         // demo loaded with ?demo=ID, while its box is open
+let demoKey = '';        // its scenario, to tell whether it was changed
 // At rest, before anything happens: t = 0 already shows data 0 leaving.
 const START = -1e-6;
 let now = START;
@@ -109,8 +113,36 @@ function rerun() {
   now = Math.min(now, trace.end);
   updateOutputs();
   writeUrl();
+  renderDemo();
   draw();
 }
+
+// Box with what the loaded demo shows, and a way back if it was changed.
+function renderDemo() {
+  demoBox.hidden = !demo;
+  if (!demo) return;
+  const changed = stateKey() !== demoKey;
+  demoBox.innerHTML = `
+    <div class="demo-head">
+      <h2>${demo.id} · ${demo.title[lang()]}</h2>
+      <button type="button" class="btn-close" data-demo="close" title="${t('demo.close')}" aria-label="${t('demo.close')}"></button>
+    </div>
+    <p>${demo.text[lang()]}</p>
+    ${changed ? `<p class="demo-changed">${t('demo.modified')}
+      <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-demo="restore">${t('demo.restore')}</button></p>` : ''}`;
+}
+
+demoBox.addEventListener('click', e => {
+  const act = e.target.closest('[data-demo]')?.dataset.demo;
+  if (!act) return;
+  if (act === 'close') demo = null;
+  if (act === 'restore') {
+    setPlaying(false);
+    now = loadQuery(new URLSearchParams(demo.query));
+    wrap.scrollTop = 0;
+  }
+  rerun();
+});
 
 function draw() {
   const r = renderTimeline(trace, now, protocol);
@@ -249,6 +281,7 @@ function applyLang(code) {
   showLink();
   showPlayButton();
   guide.innerHTML = renderGuide();
+  if (protocol) renderDemo();
 }
 
 // Tabs: «sim» (controls and diagram) and «guide»; the URL hash keeps it.
@@ -277,28 +310,51 @@ langBar.addEventListener('click', e => {
   draw();
 });
 
-// State in the URL, to link a specific scenario:
-// ?p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&r=0&l=d1.1,-a2&t=end
-function writeUrl() {
-  const q = new URLSearchParams({ p: protocol.id });
+// The scenario as URL parameters:
+// p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&r=0&l=d1.1,-a2
+function scenario() {
+  const q = new URLSearchParams({ p: f.p.value });
   for (const name of FIELDS) if (!f[name].disabled) q.set(name, f[name].value);
   const l = [...losses].map(([k, lost]) => (lost ? '' : '-') + k).join(',');
   if (l) q.set('l', l);
+  return q;
+}
+const stateKey = () => scenario().toString();
+
+// State in the URL, to link a specific scenario. With a demo open, ?demo=ID
+// goes first; on load, explicit parameters win over the demo's.
+function writeUrl() {
+  const q = new URLSearchParams(demo ? { demo: demo.id } : {});
+  for (const [key, val] of scenario()) q.set(key, val);
   const urlLang = new URLSearchParams(location.search).get('lang');
   if (urlLang) q.set('lang', lang());
   history.replaceState(null, '', `?${q}${location.hash}`);
 }
 
-function readUrl() {
-  const q = new URLSearchParams(location.search);
+// Loads a scenario from URL parameters; returns the instant to show.
+function loadQuery(q) {
   loadParams(byId(q.get('p')));
   for (const name of FIELDS) if (q.has(name) && !f[name].disabled) f[name].value = q.get(name);
+  if (!q.has('r')) f.r.value = 0;
   if (f.ack.selectedIndex < 0) f.ack.selectedIndex = 0;
   showLink();
   losses = new Map((q.get('l') ?? '').split(',').filter(Boolean)
     .map(k => k.startsWith('-') ? [k.slice(1), false] : [k, true]));
   const time = q.get('t');
-  now = time === 'end' ? Infinity : time === null ? START : +time;
+  return time === 'end' ? Infinity : time === null ? START : +time;
+}
+
+function readUrl() {
+  const q = new URLSearchParams(location.search);
+  demo = demoById(q.get('demo'));
+  if (demo) {
+    now = loadQuery(new URLSearchParams(demo.query));
+    demoKey = stateKey();
+  }
+  if (!demo || q.has('p')) {
+    const time = loadQuery(q);
+    if (!demo || q.has('t')) now = time;
+  }
 }
 
 applyLang(initialLang());

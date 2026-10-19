@@ -233,11 +233,23 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .box-n { font-size: 12px !important; }
 .window { fill: none; stroke: var(--window); stroke-width: 2.5; }
 
+/* Box of a demo loaded from DEMOS.md */
+.demo {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--ack);
+  border-radius: 6px;
+}
+.demo-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.demo h2 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 700; }
+.demo p { margin: 0; }
+.demo .demo-changed { margin-top: 6px; color: var(--muted); font-size: 0.9rem; }
+
 /* Tabs and guide */
 #tabs { margin-bottom: 12px; }
 .guide section { margin-bottom: 20px; }
 .guide h2 { font-size: 1.15rem; font-weight: 700; margin: 0 0 8px; }
-.guide p, .guide li { max-width: 72ch; }
 .legend { display: grid; grid-template-columns: 200px 1fr; gap: 10px 16px; align-items: center; margin: 0; }
 .legend dt { display: flex; justify-content: flex-end; font-weight: 400; }
 .legend dd { margin: 0; }

@@ -34,6 +34,7 @@ shown complete:
 
 | Parameter | Meaning |
 |---|---|
+| `demo` | a demo of [DEMOS.md](DEMOS.md) (`G1`…): loads its scenario and shows what it demonstrates; explicit parameters override it |
 | `p` | protocol: `saw`, `gbn` or `sr` |
 | `k` | sequence number bits |
 | `w` | send window Ws |

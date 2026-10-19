@@ -35,6 +35,9 @@ const TEXTS = {
     'step': 'Next event',
     'end': 'End',
     'hint.arrows': 'Hint: click the arrows.',
+    'demo.modified': 'You have changed the scenario of this demo.',
+    'demo.restore': 'Restore it',
+    'demo.close': 'Close',
     'progress': ({ time, confirmed, delivered, count }) =>
       `t = ${time} · confirmed ${confirmed}/${count} · delivered ${delivered}/${count}`,
     'wrong': ({ n }) => `(${n} wrong)`,
@@ -77,7 +80,7 @@ const TEXTS = {
     'check.ack.ok':
       'Cumulative ACKs: the receiver only confirms the last in-order message, and that ACK also confirms every earlier one.',
     'check.ack.error':
-      'Individual ACKs: the receiver only confirms the last in-order message. If an ACK is lost, the message it confirmed is never confirmed and the sender retransmits it forever.',
+      'Individual ACKs: if the ACK of a message is lost, the receiver answers its retransmission with the number of the next message it expects, which does not confirm it. The message is never confirmed and the sender retransmits it forever.',
     'check.efficient.ok': ({ Ws, min }) =>
       `Efficient window: W<sub>s</sub> = ${Ws} ≥ 1 + 2a = ${min}; the sender never stops.`,
     'check.efficient.warn': ({ Ws, min }) =>
@@ -172,6 +175,9 @@ const TEXTS = {
     'step': 'Siguiente evento',
     'end': 'Final',
     'hint.arrows': 'Pista: haz clic en las flechas.',
+    'demo.modified': 'Has cambiado el escenario de esta demo.',
+    'demo.restore': 'Restablecerlo',
+    'demo.close': 'Cerrar',
     'progress': ({ time, confirmed, delivered, count }) =>
       `t = ${time} · confirmados ${confirmed}/${count} · entregados ${delivered}/${count}`,
     'wrong': ({ n }) => `(${n} ${n === 1 ? 'erróneo' : 'erróneos'})`,
@@ -214,7 +220,7 @@ const TEXTS = {
     'check.ack.ok':
       'Confirmación acumulativa: el receptor solo confirma el último mensaje en orden y ese ACK confirma también todos los anteriores.',
     'check.ack.error':
-      'Confirmación individual: el receptor solo confirma el último mensaje en orden. Si se pierde un ACK, el mensaje que confirmaba no se confirmará nunca y el emisor lo retransmitirá indefinidamente.',
+      'Confirmación individual: si se pierde el ACK de un mensaje, el receptor responde a su retransmisión con el número del siguiente mensaje que espera, que no lo confirma. El mensaje nunca queda confirmado y el emisor lo retransmite sin fin.',
     'check.efficient.ok': ({ Ws, min }) =>
       `Ventana eficiente: W<sub>s</sub> = ${Ws} ≥ 1 + 2a = ${min}; el emisor no se detiene.`,
     'check.efficient.warn': ({ Ws, min }) =>
