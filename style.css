@@ -5,6 +5,7 @@
   --muted: #6b6b66;
   --line: #1d1d1b;
   --ack: #2f5f9e;
+  --ack-idle: #8fa9c9;  /* ACK with no effect on the sender */
   --sent: #ffbcbc;     /* send buffer: sent, not confirmed */
   --unsent: #aade87;   /* send buffer: not sent yet */
   --ready: #aade87;    /* receive buffer: ready for the process */
@@ -32,6 +33,7 @@
     --muted: #9a9a92;
     --line: #e8e8e3;
     --ack: #7fb0f0;
+    --ack-idle: #5f7a9c;
     --sent: #8c4a4a;
     --unsent: #4f7f2f;
     --ready: #4f7f2f;
@@ -59,6 +61,7 @@
   --muted: #9a9a92;
   --line: #e8e8e3;
   --ack: #7fb0f0;
+  --ack-idle: #5f7a9c;
   --sent: #8c4a4a;
   --unsent: #4f7f2f;
   --ready: #4f7f2f;
@@ -208,6 +211,10 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .msg.ack .drop { fill: var(--ack); }
 .ah-data { fill: var(--line); }
 .ah-ack { fill: var(--ack); }
+/* ACK with no effect on the sender: dashed, hollow head, grey label */
+.msg.ack.idle .line { stroke: var(--ack-idle); stroke-dasharray: 6 4; }
+.ah-idle { fill: var(--bg); stroke: var(--ack-idle); stroke-width: 1.3; }
+#timeline .label.idle { fill: var(--muted); }
 
 .timer-line { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; }
 .clock circle { stroke: var(--line); stroke-width: 1.2; fill: var(--bg); }

@@ -96,7 +96,7 @@ export function renderTimeline(trace, now, protocol) {
   const marker = kind => `<marker id="ah-${kind}" viewBox="0 0 10 10" refX="10" refY="5"
       markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto">
       <path class="ah-${kind}" d="M0,1.5L10,5L0,8.5z"/></marker>`;
-  out.push(`<defs>${marker('data')}${marker('ack')}
+  out.push(`<defs>${marker('data')}${marker('ack')}${marker('idle')}
     <clipPath id="past"><rect x="0" y="0" width="${WIDTH}" height="${y(now)}"/></clipPath></defs>`);
 
   out.push(
@@ -172,7 +172,7 @@ export function renderTimeline(trace, now, protocol) {
   for (const tx of acks) {
     if (tx.tDep > now) continue;
     const cy = y(tx.tDep) + ackGap(tx);
-    out.push(`<text class="label" x="${ackX}" y="${cy + 5}">ack ${tx.seq}</text>`);
+    out.push(`<text class="label${tx.noEffect ? ' idle' : ''}" x="${ackX}" y="${cy + 5}">ack ${tx.seq}</text>`);
     if (protocol.showReceiverBuffer) out.push(receiverRow(recvRowX, cy - 9, tx.receiver, trace.params));
     const note = noteAt.get(tx.tDep);
     if (note) {
@@ -198,9 +198,11 @@ export function renderTimeline(trace, now, protocol) {
     const [xe, ye] = at(f);
     const [xh, yh] = at(limit);
     const arrived = tx.lost && f >= limit;
-    out.push(`<g class="msg ${tx.kind}${tx.lost ? ' lost' : ''}" data-key="${tx.key}">`,
+    // An ACK with no effect on the sender: dashed, with a hollow head.
+    const head = tx.noEffect ? 'idle' : tx.kind;
+    out.push(`<g class="msg ${tx.kind}${tx.lost ? ' lost' : ''}${tx.noEffect ? ' idle' : ''}" data-key="${tx.key}">`,
       `<line class="hit" x1="${x1}" y1="${y1}" x2="${xh}" y2="${yh}"/>`,
-      `<line class="line" x1="${x1}" y1="${y1}" x2="${xe}" y2="${ye}"${arrived ? '' : ` marker-end="url(#ah-${tx.kind})"`}/>`,
+      `<line class="line" x1="${x1}" y1="${y1}" x2="${xe}" y2="${ye}"${arrived ? '' : ` marker-end="url(#ah-${head})"`}/>`,
       arrived ? `<rect class="drop" x="${xh - 5}" y="${yh - 5}" width="10" height="10"/>` : '',
       `<title>${t(tx.lost ? 'click.deliver' : 'click.lose', { key: tx.key })}</title></g>`);
   }

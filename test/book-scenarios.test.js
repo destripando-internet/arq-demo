@@ -151,3 +151,11 @@ test('go-back-N: each later timer expires as its retransmission leaves, also wit
   assert.ok(expiries.every(tm => tm.tEnd === rtx.get(tm.abs)));
   assert.ok(trace.timers.every(tm => !tm.restarted));
 });
+
+test('ACKs with no effect: duplicates change nothing at the sender', () => {
+  const idle = trace => trace.transmissions.filter(tx => tx.kind === 'ack' && !tx.lost).map(tx => !!tx.noEffect);
+  // Go-back-N figure: the two ack 1 answering the discarded 2 and 3.
+  assert.deepEqual(idle(run(goBackN)), [false, true, true, false, false, false]);
+  // Selective repeat, the second ack 2 after the first was lost does confirm 1.
+  assert.ok(idle(run(selectiveRepeat, { forcedLosses: ['a2'] })).every(x => !x));
+});

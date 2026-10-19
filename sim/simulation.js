@@ -200,8 +200,13 @@ export function simulate(protocol, opts = {}) {
       };
       trace.transmissions.push(tx);
       arrive(tx, () => {
+        const before = sender.state();
         sender.onAck(seq);
         tx.sender = senderNow();  // sender state once the ACK is processed
+        // No effect: it confirms nothing new (a duplicate, or an ACK the
+        // sender ignores), so whatever the sender does next is not due to it.
+        const after = sender.state();
+        tx.noEffect = after.base === before.base && after.acked.length === before.acked.length;
       });
     },
 

@@ -44,6 +44,12 @@ Inkscape:
   red clock is enough, as in the figure.
 - «endless loop» in red at the sender, when the simulation stops on a
   loop.
+- An ACK with no effect on the sender (its arrival changes neither the base
+  nor the confirmed messages: a duplicate, or one the sender ignores) is
+  dashed, lighter, with a hollow head, and its «ack N» label is grey from
+  the moment it leaves. So it is clear that what the sender does next (a
+  retransmission, say) is not due to it. In TCP, three duplicate ACKs do
+  have an effect (fast retransmit); this demo has no such mechanism.
 - Loss: the arrow stops half-way and ends in a filled square. It is the first
   half of the arrow it would have been, so it always has the same angle as
   the arrows around it.
