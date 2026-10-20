@@ -123,14 +123,15 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
   // instants, so back-to-back messages share an edge and bands never
   // overlap. A lost message's band stops half-way, like its arrow.
   const bands = [];
-  for (const { tx } of data) {
+  // Consecutive bands alternate two greys, so that touching ones can be told apart.
+  for (const [i, { tx }] of data.entries()) {
     if (tx.tDep > now) continue;
     const f = tx.lost ? 0.5 : 1;
     const x = SX + (RX - SX) * f;
     const [firstOut, lastIn] = rawEnds(tx);
     const lastOut = y(tx.tDep + tTrans), firstIn = y(tx.tArr - tTrans);
     const top = firstOut + f * (firstIn - firstOut), bottom = lastOut + f * (lastIn - lastOut);
-    bands.push(`<polygon class="band" points="${SX},${firstOut} ${x},${top} ${x},${bottom} ${SX},${lastOut}"/>`);
+    bands.push(`<polygon class="band${i % 2 ? ' alt' : ''}" points="${SX},${firstOut} ${x},${top} ${x},${bottom} ${SX},${lastOut}"/>`);
   }
   out.push(`<g clip-path="url(#past)">${bands.join('')}</g>`);
 
