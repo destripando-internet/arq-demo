@@ -1,0 +1,4 @@
+#!/bin/sh
+# Every commit carries its own version (version.js, 0.YYYYMMDD-n).
+# Enabled with: git config core.hooksPath .githooks
+python3 tools/bump_version.py >/dev/null && git add version.js

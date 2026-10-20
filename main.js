@@ -9,6 +9,7 @@ import { renderGuide } from './ui/guide.js';
 import { LANGS, lang, setLang, t } from './ui/i18n.js';
 import { GROUPS, demoById, demosIn } from './ui/demos.js';
 import { createTape } from './ui/tape.js';
+import { VERSION } from './version.js';
 
 // Playback at 1×, in pixels of the diagram per second: an RTT takes 1.5 s
 // with a = 1. Slower for larger a, so a long propagation feels longer,
@@ -403,6 +404,7 @@ function initialTab() {
   return q.has('demo') || q.has('p') ? 'sim' : 'demos';
 }
 
+document.getElementById('version').textContent = `v${VERSION}`;
 applyLang(initialLang());
 const firstTab = initialTab();  // before rerun() writes the scenario in the URL
 readUrl();

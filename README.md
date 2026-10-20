@@ -95,6 +95,14 @@ Individual ACKs by default; cumulative ACKs are an option («ACKs»). When a tim
 - **B8** [Satellite, stop-and-wait](https://destripando-internet.github.io/arq-demo/?demo=B8). Geostationary satellite: a = 312.5 and U = 1/626 ≈ 0.16 %. The sender transmits for 0.8 ms and then waits half a second for each message. Long waits are drawn compressed (Δt).
 - **B9** [Satellite, largest window with k = 5](https://destripando-internet.github.io/arq-demo/?demo=B9). Go-back-N with the largest window k = 5 allows, Ws = 31: still far from 1 + 2a = 626, so U ≈ 5 %. Filling the channel would take 10-bit sequence numbers.
 
+## Version
+
+`version.js` holds the version, shown after the title: `0.YYYYMMDD-n`, the
+date of the commit and `n` its number within the day (from 1). It changes
+with every commit: the pre-commit hook `.githooks/pre-commit` sets it with
+`tools/bump_version.py` and adds it to the commit. Enable the hook once per
+clone with `git config core.hooksPath .githooks`.
+
 ## Technology
 
 HTML + JavaScript (ES modules) + SVG, with no build step. Bootstrap 5 and
