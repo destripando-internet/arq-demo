@@ -94,16 +94,22 @@ fieldset.group legend {
   color: var(--muted);
 }
 #controls label { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
-#controls .form-control { width: 5em; }
-#controls .form-control.narrow { width: 3.6em; }
-#controls input[name=tt], #controls input[name=d] { width: 6em; }
+#controls .form-control { width: 3.6em; }
+#controls .form-control.narrow { width: 2.6em; }
+#controls input[name=tt], #controls input[name=d] { width: 4.2em; }
+/* Compact number fields: figures to the right and no spin buttons (the
+   arrow keys still step them). */
+#controls input[type=number] { appearance: textfield; padding-inline: 0.35rem; text-align: right; }
+#controls input[type=number]::-webkit-inner-spin-button,
+#controls input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 #controls .form-select { width: auto; }
-#controls .form-range { width: 110px; }
+#controls select[name=speed] { text-align: right; }
 fieldset.group .line { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 /* Computed values (a, 1 + 2a): drawn as a disabled form-control-sm. */
 .calc {
-  min-width: 4.2em;
-  padding: 0.25rem 0.5rem;
+  min-width: 2.6em;
+  padding: 0.25rem 0.35rem;
+  text-align: right;
   border: var(--bs-border-width) solid var(--bs-border-color);
   border-radius: var(--bs-border-radius-sm);
   background-color: var(--bs-secondary-bg);
@@ -111,7 +117,6 @@ fieldset.group .line { display: flex; flex-wrap: wrap; gap: 8px 14px; align-item
   line-height: 1.5;
   color: var(--bs-body-color);
 }
-.diagram-hint { margin: 0 0 4px; font-size: 0.85rem; }
 .player { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .clock-readout { font-variant-numeric: tabular-nums; color: var(--muted); }
 .clock-readout .bad { color: var(--bad); }
@@ -152,7 +157,7 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 #state .hint { margin-top: 4px; font-size: 0.8rem; }
 
 #timeline-wrap {
-  max-height: calc(100vh - 110px);
+  max-height: calc(100vh - 86px);
   overflow-y: scroll;
   border: 1px solid var(--border);
   border-radius: 8px;

@@ -62,17 +62,14 @@
             <input name="tt" type="number" min="0.1" max="20" step="any" class="form-control form-control-sm"></label>
           <label data-i18n-title="d.title"><span>t<sub>prop</sub></span>
             <input name="d" type="number" min="0" max="1000" step="any" class="form-control form-control-sm"></label>
-        </div>
-        <div class="line">
           <label data-i18n-title="calc.title">a <output id="calc-a" class="calc"></output></label>
           <label data-i18n-title="calc.title">1 + 2a <output id="calc-2a" class="calc"></output></label>
         </div>
         <div class="line">
           <label><span data-i18n="messages"></span>
-            <input name="n" type="number" min="1" max="60" class="form-control form-control-sm"></label>
+            <input name="n" type="number" min="1" max="60" class="form-control form-control-sm narrow"></label>
           <label><span data-i18n="loss"></span>
-            <input name="r" type="range" min="0" max="50" step="5" value="0" class="form-range">
-            <output for="r" data-unit="%"></output></label>
+            <input name="r" type="number" min="0" max="50" value="0" class="form-control form-control-sm narrow"></label>
         </div>
       </fieldset>
     </div>
@@ -103,8 +100,6 @@
        data-i18n-title="split.title" data-i18n-aria="split.title"></div>
 
   <div class="sim-main">
-  <p class="hint diagram-hint" id="diagram-hint"></p>
-
   <section id="tape" class="tape"></section>
 
   <div id="timeline-wrap">

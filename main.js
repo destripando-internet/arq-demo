@@ -29,7 +29,6 @@ const clockOut = document.getElementById('clock');
 const playBtn = form.querySelector('[data-act=play]');
 const langBar = document.getElementById('lang');
 const tabs = document.getElementById('tabs');
-const hint = document.getElementById('diagram-hint');
 const guide = document.getElementById('tab-guide');
 const demoBox = document.getElementById('demo');
 const demoList = document.getElementById('tab-demos');
@@ -113,11 +112,6 @@ function markInputs(an) {
   wrap.classList.toggle('failed', !!(an.failure || an.loop || an.unfinished));
 }
 
-function updateOutputs() {
-  for (const o of form.querySelectorAll('output[for]'))
-    o.value = f[o.htmlFor].value + (o.dataset.unit ?? '');
-}
-
 function rerun() {
   protocol = byId(f.p.value);
   trace = simulate(protocol, { ...readParams(), forcedLosses: losses });
@@ -129,7 +123,6 @@ function rerun() {
   document.getElementById('calc-2a').value = +(1 + 2 * analysis.a).toPrecision(4);
   markInputs(analysis);
   now = Math.min(now, trace.end);
-  updateOutputs();
   writeUrl();
   renderDemo();
   draw();
@@ -199,7 +192,6 @@ function draw() {
   panel.innerHTML = renderState(trace, analysis);
   clockOut.innerHTML = progress(trace, now);
   tape.update(now);
-  hint.textContent = t('hint.arrows');
   if (playing) {
     const yPx = r.playheadY * svg.clientWidth / r.width;
     if (yPx > wrap.scrollTop + wrap.clientHeight * 0.8)

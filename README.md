@@ -13,7 +13,7 @@ from one of the [demos](#demos).
   figures. It plays back at 0.5× to 4× or goes event by event, forwards and
   backwards.
 - Clicking an arrow loses it, or delivers it if it was lost. Random losses
-  are set with a slider.
+  are set as a percentage, from 0 to 50.
 - Above the diagram, the sender's messages in order, with the send window
   as a frame that slides over them as ACKs arrive.
 - The chapter's constraints, marked ✓, ⚠ or ✗ and highlighted on the
