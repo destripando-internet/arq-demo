@@ -144,6 +144,34 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
       + `Δt = ${+(b.t1 - b.t0).toPrecision(4)}<title>${t('gap.title')}</title></text>`);
   }
 
+  // Lines of the arrow under the pointer get a grey band from the outer edge
+  // to the axis, and the uncoloured cells of their buffers turn grey: for a
+  // data message, the line where it leaves and the one where it arrives; for
+  // an ACK, only the one where it arrives. main.js marks them by data-keys,
+  // the arrows of each line. Behind timers and labels.
+  const arrivals = (kind, t) => trace.transmissions
+    .filter(tx => tx.kind === kind && !tx.lost && tx.tArr === t).map(tx => tx.key);
+  const sendKeys = new Map();  // time of a sender line → its arrows
+  for (const { tx } of data) if (tx.tDep <= now) sendKeys.set(tx.tDep, [tx.key, ...arrivals('ack', tx.tDep)]);
+  if (protocol.showBuffer)
+    for (const r of rows) if (!r.data && r.t <= now) sendKeys.set(r.t, arrivals('ack', r.t));
+  const recvKeys = tx => arrivals('data', tx.tDep);
+  // A band from x1 to x2, square on the axis side (at x2 on the sender's,
+  // at x1 on the receiver's) and rounded on the outer one.
+  const lineBand = (keys, x1, x2, cy, sender) => {
+    const top = cy - 14, bottom = top + BOX + 10, r = 3;
+    const d = sender
+      ? `M${x2},${top}V${bottom}H${x1 + r}a${r},${r} 0 0 1 -${r},-${r}V${top + r}a${r},${r} 0 0 1 ${r},-${r}Z`
+      : `M${x1},${top}H${x2 - r}a${r},${r} 0 0 1 ${r},${r}V${bottom - r}a${r},${r} 0 0 1 -${r},${r}H${x1}Z`;
+    return `<path class="line-bg" data-keys="${keys.join(' ')}" d="${d}"/>`;
+  };
+  const sendLeft = (protocol.showBuffer ? sendRowX - Math.max(0, ...extra) * BOX : labelX - labelWidth) - 6;
+  const AXIS = 0.75;  // half the axis stroke: the bands stop at its edge
+  for (const [time, keys] of sendKeys) out.push(lineBand(keys, sendLeft, SX - AXIS, y(time), true));
+  for (const tx of acks)
+    if (tx.tDep <= now) out.push(lineBand(recvKeys(tx), RX + AXIS, RX + right - 14, y(tx.tDep) + ackGap(tx)));
+  const bufRow = (keys, body) => `<g class="buf-row" data-keys="${keys.join(' ')}">${body}</g>`;
+
   // Timers. A start clock stays at the height of its message. If a timer is
   // cancelled where another one starts in the same column (messages N and
   // N + 2^k), the cancel clock is shifted up so the clocks do not overlap.
@@ -173,7 +201,8 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
   }
   if (protocol.showBuffer)
     rows.forEach((r, i) => {
-      if (r.t <= now) out.push(senderRow(sendRowX, r.cy - 9, r.snap, r.confirmed, extra[i], trace.params));
+      if (r.t > now) return;
+      out.push(bufRow(sendKeys.get(r.t) ?? [], senderRow(sendRowX, r.cy - 9, r.snap, r.confirmed, extra[i], trace.params)));
     });
   if (trace.loop && trace.loop.t <= now)
     out.push(`<text class="label note bad" x="${labelX}" y="${y(trace.loop.t) + 5}" text-anchor="end">${t('loop!')}</text>`);
@@ -184,7 +213,8 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
     if (tx.tDep > now) continue;
     const cy = y(tx.tDep) + ackGap(tx);
     out.push(`<text class="label${tx.noEffect ? ' idle' : ''}" x="${ackX}" y="${cy + 5}">ack ${tx.seq}</text>`);
-    if (protocol.showReceiverBuffer) out.push(receiverRow(recvRowX, cy - 9, tx.receiver, trace.params));
+    if (protocol.showReceiverBuffer)
+      out.push(bufRow(recvKeys(tx), receiverRow(recvRowX, cy - 9, tx.receiver, trace.params)));
     const note = noteAt.get(tx.tDep);
     if (note) {
       out.push(noteText(noteX, cy, note));

@@ -214,6 +214,7 @@ function draw() {
   svg.setAttribute('width', r.width);
   svg.setAttribute('height', r.height);
   svg.innerHTML = r.svg;
+  markHover();
   panel.innerHTML = renderState(trace, analysis);
   tape.update(now);
   if (playing) {
@@ -320,6 +321,22 @@ form.addEventListener('wheel', e => {
   wheelDelta = 0;
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }, { passive: false });
+
+// Pointer on an arrow: the lines where it leaves and where it arrives get a
+// grey background, also across the redraws while playing.
+let hoverKey = null;
+function markHover() {
+  for (const el of svg.querySelectorAll('[data-keys]'))
+    el.classList.toggle('hl', !!hoverKey && el.dataset.keys.split(' ').includes(hoverKey));
+}
+svg.addEventListener('pointerover', e => {
+  hoverKey = e.target.closest('.msg')?.dataset.key ?? null;
+  markHover();
+});
+svg.addEventListener('pointerleave', () => {
+  hoverKey = null;
+  markHover();
+});
 
 svg.addEventListener('click', e => {
   const key = e.target.closest('[data-key]')?.dataset.key;

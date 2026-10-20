@@ -23,6 +23,7 @@
   --playhead: #e05a00;
   --border: #d6d6d0;
   --changed-bg: #e4edf9;  /* field changed from the loaded demo */
+  --hover-bg: #f7f7f6;    /* lines of the arrow under the pointer */
   color-scheme: light;
 }
 
@@ -215,6 +216,10 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .tick { fill: none; stroke: var(--ack); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .box-n { font-size: 12px !important; }
 .window { fill: none; stroke: var(--window); stroke-width: 2.5; }
+/* Lines of the arrow under the pointer: a grey band up to the axis, also in
+   the cells without colour. */
+.line-bg { fill: none; pointer-events: none; }
+.line-bg.hl, .buf-row.hl .box:not(.sent, .unsent, .ready, .held, .acked) { fill: var(--hover-bg); }
 
 /* Tape: every message in order and the send window sliding over them */
 .tape { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
