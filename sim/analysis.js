@@ -25,6 +25,7 @@ export function analyze(trace, protocol) {
     requiredAck: protocol.requiredAck,
     ackOk: !protocol.requiredAck || ack === protocol.requiredAck,
     efficient: Ws >= 1 + 2 * a,
+    fixedWindow: !!protocol.fixed,  // stop-and-wait: Ws = 1 cannot grow
     timeoutOk: timeout > rtt,
     uTheory: Math.min(1, Ws / (1 + 2 * a)),
     uMeasured: trace.done ? count * tTrans / trace.done : null,

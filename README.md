@@ -27,10 +27,13 @@ from one of the [demos](#demos).
   and a geostationary satellite (times in ms). Long waits are drawn
   compressed.
 - «Initial scenario» loads the example of each protocol, with its losses.
+- The app opens on the «Demos» tab, the list of [demos](#demos) by section;
+  choosing one loads it in the «Simulation» tab.
 - The «Guide» tab explains the legend, the constraints and the utilisation.
 
 ## Demos
 
+The app lists them in its «Demos» tab, with the same sections and texts.
 Each link (`?demo=ID`) loads a scenario ready to play from the start;
 above it, a box explains what the demo shows with the text below, in
 English or Spanish as the UI. ▶ plays it, ⏭ jumps to the end, and clicking
@@ -45,6 +48,10 @@ their section.
 Conventions: an ACK carries the number of the confirmed message + 1 (with
 cumulative ACKs, the next expected one). ACKs have no transmission delay.
 Times are abstract units, except with the real link presets (ms).
+
+### Getting started
+
+- **T1** [How to read the diagram](https://destripando-internet.github.io/arq-demo/?demo=T1). Stop-and-wait with a = 1 and three messages, none lost. Time runs downwards, with the sender on the left and the receiver on the right. Each «data» arrow is a message and each «ack» arrow comes back to confirm it; the sender waits for it before sending the next one. Press ▶ to play it, or ⏭ to see the end. Then click an arrow to «lose» that message: its timer expires and the sender retransmits it. The Guide tab explains every symbol.
 
 ### Stop-and-wait
 
@@ -102,9 +109,11 @@ without processing them). The user interface is in English and Spanish
 **Node.js is not needed**, neither for the app nor for the tests. ES modules
 do not load from `file://`, so any static server will do:
 
-    python3 -m http.server 8765
+    make devel
 
-and open <http://localhost:8765>. A demo is then at
+(`python3 -m http.server` on 127.0.0.1, telling the browser not to cache
+the files, so it always runs the edited ones; `make devel PORT=8000`
+changes the port) and open <http://localhost:8765>. A demo is then at
 <http://localhost:8765/?demo=G1>.
 
 ## Tests

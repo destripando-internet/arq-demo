@@ -4,13 +4,44 @@
 // and never mentions the book. Numbers use a decimal point, as the rest of
 // the UI. README.md repeats the English titles and texts: keep both in sync.
 
+// Sections of the «Demos» tab and of README.md, in order: a demo belongs to
+// the one its ID starts with.
+export const GROUPS = [
+  { id: 'T', title: { en: 'Getting started', es: 'Primeros pasos' } },
+  { id: 'S', title: { en: 'Stop-and-wait', es: 'Parada y espera' } },
+  {
+    id: 'G', title: { en: 'Go-back-N', es: 'Repetición continua' },
+    text: {
+      en: 'Cumulative ACKs; when a timer expires, that message and every later one already sent are retransmitted (each message has its own timer).',
+      es: 'Confirmación acumulativa; cuando expira un temporizador se retransmiten ese mensaje y todos los posteriores ya enviados (cada mensaje tiene su propio temporizador).',
+    },
+  },
+  {
+    id: 'R', title: { en: 'Selective repeat', es: 'Repetición selectiva' },
+    text: {
+      en: 'Individual ACKs by default; cumulative ACKs are an option («ACKs»). When a timer expires, only that message is retransmitted.',
+      es: 'Confirmación individual por defecto; la acumulativa es una opción («Confirmación»). Cuando expira un temporizador, solo se retransmite ese mensaje.',
+    },
+  },
+  { id: 'C', title: { en: 'Cumulative ACKs', es: 'Confirmación acumulativa' } },
+  { id: 'B', title: { en: 'Bandwidth × delay', es: 'Ancho de banda × retardo' } },
+];
+
 export const DEMOS = [
+  {
+    id: 'T1', query: 'p=saw&n=3&tt=1&d=1&to=5',
+    title: { en: 'How to read the diagram', es: 'Cómo leer el diagrama' },
+    text: {
+      en: 'Stop-and-wait with a = 1 and three messages, none lost. Time runs downwards, with the sender on the left and the receiver on the right. Each «data» arrow is a message and each «ack» arrow comes back to confirm it; the sender waits for it before sending the next one. Press ▶ to play it, or ⏭ to see the end. Then click an arrow to «lose» that message: its timer expires and the sender retransmits it. The Guide tab explains every symbol.',
+      es: 'Parada y espera con a = 1 y tres mensajes, sin pérdidas. El tiempo avanza hacia abajo, con el emisor a la izquierda y el receptor a la derecha. Cada flecha «data» es un mensaje y cada flecha «ack» vuelve para confirmarlo; el emisor la espera antes de enviar el siguiente. Pulsa ▶ para reproducirlo, o ⏭ para ver el final. Después haz clic en una flecha para «perder» ese mensaje: su temporizador expira y el emisor lo retransmite. La pestaña Guía explica cada símbolo.',
+    },
+  },
   {
     id: 'S1', query: 'p=saw&n=3&tt=1&d=1&to=5&l=d1.1,a3',
     title: { en: 'Lost message and lost ACK', es: 'Mensaje perdido y ACK perdido' },
     text: {
       en: 'Message 1 is lost: its timer expires and the sender retransmits it. Then the ACK of the second message 0 is lost, so the sender retransmits that one too and the receiver gets a duplicate. It discards it but confirms it anyway; otherwise the sender would retransmit it forever.',
-      es: 'Se pierde el mensaje 1: su temporizador expira y el emisor lo retransmite. Después se pierde la confirmación del segundo mensaje 0, así que el emisor también lo retransmite y al receptor le llega un duplicado. Lo descarta, pero lo confirma igualmente; si no, el emisor lo retransmitiría sin fin.',
+      es: 'Se pierde el mensaje 1: su temporizador expira y el emisor lo retransmite. Después se pierde la confirmación del segundo mensaje 0, así que el emisor también lo retransmite y al receptor le llega un duplicado. Lo descarta, pero lo confirma igualmente; si no fuera así, lo retransmitiría sin fin.',
     },
   },
   {
@@ -192,6 +223,7 @@ export const DEMOS = [
 ];
 
 export const demoById = id => DEMOS.find(d => d.id === id) ?? null;
+export const demosIn = group => DEMOS.filter(d => d.id.startsWith(group.id));
 
 // Simulation options of a demo, as the URL would set them (for the tests).
 export function demoOptions(demo) {

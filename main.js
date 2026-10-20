@@ -7,7 +7,7 @@ import { timeScale } from './ui/timescale.js';
 import { renderState, progress, num } from './ui/state.js';
 import { renderGuide } from './ui/guide.js';
 import { LANGS, lang, setLang, t } from './ui/i18n.js';
-import { demoById } from './ui/demos.js';
+import { GROUPS, demoById, demosIn } from './ui/demos.js';
 import { createTape } from './ui/tape.js';
 
 // Playback at 1×, in pixels of the diagram per second: an RTT takes 1.5 s
@@ -30,6 +30,7 @@ const tabs = document.getElementById('tabs');
 const hint = document.getElementById('diagram-hint');
 const guide = document.getElementById('tab-guide');
 const demoBox = document.getElementById('demo');
+const demoList = document.getElementById('tab-demos');
 const tape = createTape(document.getElementById('tape'));
 
 let protocol, trace, times, analysis, scale;
@@ -141,10 +142,37 @@ demoBox.addEventListener('click', e => {
   if (act === 'close') demo = null;
   if (act === 'restore') {
     setPlaying(false);
-    now = loadQuery(new URLSearchParams(demo.query));
+    loadDemo(demo);
     wrap.scrollTop = 0;
   }
   rerun();
+});
+
+// «Demos» tab: every demo by section, the loaded one highlighted.
+function renderDemoList() {
+  demoList.innerHTML = `<p>${t('demos.intro')}</p>` + GROUPS.map(g => `
+    <section>
+      <h2>${g.title[lang()]}</h2>
+      ${g.text ? `<p>${g.text[lang()]}</p>` : ''}
+      <div class="list-group">${demosIn(g).map(d => `
+        <a href="?demo=${d.id}" class="list-group-item list-group-item-action demo-item${d === demo ? ' current' : ''}"
+           data-demo-id="${d.id}"${d === demo ? ' aria-current="true"' : ''}>
+          <h3><span class="demo-id">${d.id}</span> ${d.title[lang()]}</h3>
+          <p>${d.text[lang()]}</p>
+        </a>`).join('')}</div>
+    </section>`).join('');
+}
+
+// A plain click loads the demo here; with a modifier, the link opens a new tab.
+demoList.addEventListener('click', e => {
+  const id = e.target.closest('[data-demo-id]')?.dataset.demoId;
+  if (!id || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  setPlaying(false);
+  loadDemo(demoById(id));
+  wrap.scrollTop = 0;
+  rerun();
+  showTab('sim');
 });
 
 function draw() {
@@ -285,10 +313,12 @@ function applyLang(code) {
   showLink();
   showPlayButton();
   guide.innerHTML = renderGuide();
+  renderDemoList();
   if (protocol) renderDemo();
 }
 
-// Tabs: «sim» (controls and diagram) and «guide»; the URL hash keeps it.
+// Tabs: «demos» (the list), «sim» (controls and diagram) and «guide»; the URL
+// hash keeps it.
 function showTab(name) {
   for (const b of tabs.querySelectorAll('[data-tab]')) {
     const on = b.dataset.tab === name;
@@ -296,6 +326,7 @@ function showTab(name) {
     b.ariaSelected = on;
     document.getElementById(`tab-${b.dataset.tab}`).hidden = !on;
   }
+  if (name === 'demos') renderDemoList();
   if (name !== 'sim') setPlaying(false);
   const base = location.pathname + location.search;
   history.replaceState(null, '', name === 'sim' ? base : `${base}#${name}`);
@@ -348,20 +379,34 @@ function loadQuery(q) {
   return time === 'end' ? Infinity : time === null ? START : +time;
 }
 
+// Loads a demo's scenario, from its start.
+function loadDemo(d) {
+  demo = d;
+  now = loadQuery(new URLSearchParams(demo.query));
+  demoKey = stateKey();
+}
+
 function readUrl() {
   const q = new URLSearchParams(location.search);
-  demo = demoById(q.get('demo'));
-  if (demo) {
-    now = loadQuery(new URLSearchParams(demo.query));
-    demoKey = stateKey();
-  }
+  const d = demoById(q.get('demo'));
+  if (d) loadDemo(d);
   if (!demo || q.has('p')) {
     const time = loadQuery(q);
     if (!demo || q.has('t')) now = time;
   }
 }
 
+// The tab in the hash; otherwise the simulation if the URL sets a scenario,
+// or else the list of demos.
+function initialTab() {
+  const name = location.hash.slice(1);
+  if (name === 'demos' || name === 'guide') return name;
+  const q = new URLSearchParams(location.search);
+  return q.has('demo') || q.has('p') ? 'sim' : 'demos';
+}
+
 applyLang(initialLang());
+const firstTab = initialTab();  // before rerun() writes the scenario in the URL
 readUrl();
 rerun();
-showTab(location.hash === '#guide' ? 'guide' : 'sim');
+showTab(firstTab);

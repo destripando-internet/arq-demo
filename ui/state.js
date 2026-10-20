@@ -19,14 +19,14 @@ export function renderState(trace, an) {
     </div>`;
 }
 
-// «t = … · confirmed … · delivered …» at the current time.
+// «confirmed … · delivered …» at the current time.
 export function progress(trace, now) {
   let snap = trace.snapshots[0];
   for (const s of trace.snapshots) if (s.t <= now) snap = s;
   // Deliveries of a message other than the one due (accepted duplicates)
   const wrong = trace.deliveries.filter((d, i) => d.t <= now && d.abs !== i).length;
   const text = t('progress', {
-    time: +now.toFixed(2), confirmed: snap.base, delivered: snap.delivered, count: trace.params.count,
+    confirmed: snap.base, delivered: snap.delivered, count: trace.params.count,
   });
   return text + (wrong ? ` <strong class="bad">${t('wrong', { n: wrong })}</strong>` : '');
 }
@@ -51,7 +51,7 @@ function checks(an) {
   return [
     check('window', an.windowOk, 'error'),
     ...(an.requiredAck ? [check('ack', an.ackOk, 'error')] : []),
-    check('efficient', an.efficient, 'warn'),
+    !an.efficient && an.fixedWindow ? ['warn', t('check.efficient.saw', args)] : check('efficient', an.efficient, 'warn'),
     check('timeout', an.timeoutOk, 'warn'),
   ];
 }

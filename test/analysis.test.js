@@ -31,6 +31,7 @@ test('minimum window to keep sending: Ws ≥ 1 + 2a', () => {
   assert.ok(!analysis(goBackN, { window: 3, tTrans: 1, tProp: 2 }).efficient);
   assert.ok(analysis(goBackN, { k: 3, window: 5, tTrans: 1, tProp: 2 }).efficient);
   assert.ok(!analysis(stopAndWait, {}).efficient);
+  assert.ok(analysis(stopAndWait, {}).fixedWindow && !analysis(goBackN, {}).fixedWindow);
 });
 
 test('timer longer than RTT = Ttrans + 2·Tprop', () => {

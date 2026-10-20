@@ -11,11 +11,11 @@ marked as fixed, and new ones are appended. Line numbers refer to
 
 | Issue | Status |
 |---|---|
-| E1–E4, E6, E7, E9–E13, E16–E18 | fixed |
+| E1–E4, E6–E13, E15–E18 | fixed |
 | E5 | reopened: the original figure was right, revert pending decision |
-| E8 | proposal, pending decision |
-| E14, E15 | postponed |
-| E19, E20 | pending |
+| E14 | postponed |
+| E19 | closed for the book |
+| E20 | decided: the figures follow the demo; redraw pending |
 
 ## Stop-and-wait
 
@@ -67,7 +67,7 @@ ejemplo», «envia».
 
 ## Selective repeat
 
-**E8 · lines 176 and 193 · proposal.** «repite confirmaciones cuando llegan
+**E8 · lines 176 and 193 · fixed.** «repite confirmaciones cuando llegan
 mensajes fuera de secuencia» and «confirmaciones duplicadas ack 2» describe
 cumulative ACKs. They contradict line 360 («cada confirmación se refiere a
 un único mensaje») and the goal in line 178 (not retransmitting messages
@@ -92,6 +92,14 @@ Proposed structure:
 
 The standalone section would not disappear: it moves before selective
 repeat, and its example (line 370) moves into the selective repeat section.
+
+Done on 2026-10-19 with another order: go-back-N, selective repeat
+(individual ACKs), «Confirmación acumulativa» (the concept and selective
+repeat with cumulative ACKs, C1), bandwidth × delay and NACK. The
+contradiction had already gone with E9 and E11. Go-back-N keeps a forward
+reference to the cumulative ACK section, and the NACK example cites its
+figure instead of «el ejemplo anterior», since bandwidth × delay now comes
+in between.
 
 **E9 · figure selective-repeat · fixed.** Redrawn with individual ACKs (R1):
 ack 4, 5 and 6 for messages 3, 4 and 5, which cancel their timers; only 2 is
@@ -173,10 +181,10 @@ it. (The «ventana de 3 bits» in the same line was fixed with E18.)
 
 ## Other sections
 
-**E15 · line 28 · postponed.** PPP is given as an example of link-layer
+**E15 · line 28 · fixed.** PPP was given as an example of link-layer
 reliability, but PPP does not provide it by default (RFC 1661/1662 use
 unnumbered frames; the numbered mode of RFC 1663 is optional and rarely
-used).
+used). Removed: the example is now «(como \acs{HDLC})».
 
 **E16 · line 48 · fixed.** «polinomio de redundancia cíclica (CRC)» → «una
 comprobación de redundancia cíclica (CRC)»: CRC stands for cyclic redundancy
@@ -196,13 +204,16 @@ example (line 380), the same mistake as E6.
 
 ## Pending
 
-**E19 · other diagrams · pending.** E4 describes how go-back-N timers behave
+**E19 · other diagrams · closed for the book.** E4 describes how go-back-N timers behave
 (the later timers restart, or expire if they were due at that instant). Any other diagram of the
 book or of the course slides that shows go-back-N timers should be reviewed.
+The go-back-n figure (E5) is the only go-back-N diagram of the book. Not
+reviewed, outside the book: the ARQ exercises in `redes-2/ejercicios/ARQ`
+and the exam figures `go-backn-01*` in `graf.exams/redes/figures`.
 
-**E20 · colours of the buffers · pending decision.** The demo now uses its
+**E20 · colours of the buffers · decided, redraw pending.** The demo now uses its
 own colours: send buffer, sent and not confirmed in light red, not sent in
 green, free slot without colour; receive buffer, ready for the process in
 green, held behind a gap in violet. The book's figures keep green for sent and not
-confirmed (sender) and for received (receiver). Decide whether the figures
-should follow the demo.
+confirmed (sender) and for received (receiver). Decided on 2026-10-19: the
+figures follow the demo.

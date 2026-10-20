@@ -24,12 +24,16 @@
 
   <ul class="nav nav-tabs" id="tabs" role="tablist">
     <li class="nav-item" role="presentation">
-      <button type="button" class="nav-link active" role="tab" data-tab="sim" data-i18n="tab.sim"></button></li>
+      <button type="button" class="nav-link active" role="tab" data-tab="demos" data-i18n="tab.demos"></button></li>
+    <li class="nav-item" role="presentation">
+      <button type="button" class="nav-link" role="tab" data-tab="sim" data-i18n="tab.sim"></button></li>
     <li class="nav-item" role="presentation">
       <button type="button" class="nav-link" role="tab" data-tab="guide" data-i18n="tab.guide"></button></li>
   </ul>
 
-  <div id="tab-sim" role="tabpanel">
+  <div id="tab-demos" class="demos" role="tabpanel"></div>
+
+  <div id="tab-sim" role="tabpanel" hidden>
   <section id="demo" class="demo" hidden></section>
   <form id="controls" onsubmit="return false">
     <div class="groups">
@@ -96,7 +100,7 @@
           <option value="2">2×</option>
           <option value="4">4×</option>
         </select></label>
-      <span id="clock" class="clock-readout">t = 0</span>
+      <span id="clock" class="clock-readout"></span>
     </div>
   </form>
 

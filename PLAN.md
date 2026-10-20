@@ -151,8 +151,8 @@ not specific or contradicts itself; see «Protocol decisions» in
   playback speed, initial scenario, clear losses); a playback bar (start,
   previous event, play/pause, next event, end); clicks on the arrows to lose
   or deliver them.
-- **Tabs**: *Simulation* and *Guide* (legend, utilisation, constraints and
-  how to use the demo).
+- **Tabs**: *Demos* (the list of demos, where the app opens), *Simulation*
+  and *Guide* (legend, utilisation, constraints and how to use the demo).
 - **Panel**: constraints, theoretical and measured utilisation, number of
   retransmissions.
 

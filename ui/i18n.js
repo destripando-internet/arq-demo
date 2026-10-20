@@ -6,8 +6,10 @@ const TEXTS = {
   en: {
     'title': 'ARQ protocols',
     'language': 'Language',
+    'tab.demos': 'Demos',
     'tab.sim': 'Simulation',
     'tab.guide': 'Guide',
+    'demos.intro': 'Each demo loads a scenario ready to play from the start. Choose one:',
     'algorithm': 'Algorithm',
     'scenario': 'Scenario',
     'protocol': 'Protocol',
@@ -39,8 +41,8 @@ const TEXTS = {
     'demo.modified': 'You have changed the scenario of this demo.',
     'demo.restore': 'Restore it',
     'demo.close': 'Close',
-    'progress': ({ time, confirmed, delivered, count }) =>
-      `t = ${time} · confirmed ${confirmed}/${count} · delivered ${delivered}/${count}`,
+    'progress': ({ confirmed, delivered, count }) =>
+      `confirmed ${confirmed}/${count} · delivered ${delivered}/${count}`,
     'wrong': ({ n }) => `(${n} wrong)`,
 
     'proto.saw': 'Stop-and-wait',
@@ -86,6 +88,8 @@ const TEXTS = {
       `Efficient window: W<sub>s</sub> = ${Ws} ≥ 1 + 2a = ${min}; the sender never stops.`,
     'check.efficient.warn': ({ Ws, min }) =>
       `Inefficient window: W<sub>s</sub> = ${Ws} &lt; 1 + 2a = ${min}; the sender stops to wait for ACKs.`,
+    'check.efficient.saw': ({ min }) =>
+      `Inefficient window, inherent to stop-and-wait: W<sub>s</sub> = 1 &lt; 1 + 2a = ${min}; the sender stops to wait for every ACK.`,
     'check.timeout.ok': ({ timeout, rtt }) =>
       `Timer: ${timeout} &gt; RTT = T<sub>trans</sub> + 2·T<sub>prop</sub> = ${rtt}`,
     'check.timeout.warn': ({ timeout, rtt }) =>
@@ -148,8 +152,10 @@ const TEXTS = {
   es: {
     'title': 'Protocolos ARQ',
     'language': 'Idioma',
+    'tab.demos': 'Demos',
     'tab.sim': 'Simulación',
     'tab.guide': 'Guía',
+    'demos.intro': 'Cada demo carga un escenario listo para reproducir desde el principio. Elige una:',
     'algorithm': 'Algoritmo',
     'scenario': 'Escenario',
     'protocol': 'Protocolo',
@@ -181,8 +187,8 @@ const TEXTS = {
     'demo.modified': 'Has cambiado el escenario de esta demo.',
     'demo.restore': 'Restablecerlo',
     'demo.close': 'Cerrar',
-    'progress': ({ time, confirmed, delivered, count }) =>
-      `t = ${time} · confirmados ${confirmed}/${count} · entregados ${delivered}/${count}`,
+    'progress': ({ confirmed, delivered, count }) =>
+      `confirmados ${confirmed}/${count} · entregados ${delivered}/${count}`,
     'wrong': ({ n }) => `(${n} ${n === 1 ? 'erróneo' : 'erróneos'})`,
 
     'proto.saw': 'Parada y espera',
@@ -228,6 +234,8 @@ const TEXTS = {
       `Ventana eficiente: W<sub>s</sub> = ${Ws} ≥ 1 + 2a = ${min}; el emisor no se detiene.`,
     'check.efficient.warn': ({ Ws, min }) =>
       `Ventana ineficiente: W<sub>s</sub> = ${Ws} &lt; 1 + 2a = ${min}; el emisor se detiene a esperar confirmaciones.`,
+    'check.efficient.saw': ({ min }) =>
+      `Ventana ineficiente, inherente a parada y espera: W<sub>s</sub> = 1 &lt; 1 + 2a = ${min}; el emisor se detiene a esperar cada confirmación.`,
     'check.timeout.ok': ({ timeout, rtt }) =>
       `Temporizador: ${timeout} &gt; RTT = T<sub>trans</sub> + 2·T<sub>prop</sub> = ${rtt}`,
     'check.timeout.warn': ({ timeout, rtt }) =>

@@ -286,10 +286,14 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .demo p { margin: 0; }
 .demo .demo-changed { margin-top: 6px; color: var(--muted); font-size: 0.9rem; }
 
-/* Tabs and guide */
+/* Tabs, list of demos and guide */
 #tabs { margin-bottom: 12px; }
-.guide section { margin-bottom: 20px; }
-.guide h2 { font-size: 1.15rem; font-weight: 700; margin: 0 0 8px; }
+.guide section, .demos section { margin-bottom: 20px; }
+.guide h2, .demos h2 { font-size: 1.15rem; font-weight: 700; margin: 0 0 8px; }
+.demo-item h3 { margin: 0 0 2px; font-size: 1rem; font-weight: 700; }
+.demo-item p { margin: 0; }
+.demo-item .demo-id { margin-right: 6px; color: var(--muted); }
+.demo-item.current { border-left: 4px solid var(--ack); }
 .legend { display: grid; grid-template-columns: 200px 1fr; gap: 10px 16px; align-items: center; margin: 0; }
 .legend dt { display: flex; justify-content: flex-end; font-weight: 400; }
 .legend dd { margin: 0; }
