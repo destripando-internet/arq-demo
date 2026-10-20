@@ -171,7 +171,7 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 
 /* SVG */
 #timeline text { fill: var(--fg); font-size: 15px; }
-#timeline .head { font-weight: 700; font-size: 20px; }
+#timeline .head { font-weight: 700; font-size: 18px; }
 #timeline .note { font-weight: 700; font-size: 13px; }
 #timeline .note.bad { fill: var(--bad); }
 #timeline .ack-label { fill: var(--ack); }

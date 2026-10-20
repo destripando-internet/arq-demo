@@ -8,7 +8,8 @@
 import { t } from './i18n.js';
 import { timeScale, ROW } from './timescale.js';
 
-const TOP = 70;
+const TOP = 34;
+const SIDE = 24;    // column at each side for the names, written upright
 const BOX = 16;      // buffer cell
 const GAP = 8;       // between label, buffer and note
 const ACK_GAP = 5;   // an ACK leaves this far below the data arrival it
@@ -44,7 +45,9 @@ export function eventTimes(trace) {
   return [...ts].sort((a, b) => a - b);
 }
 
-export function renderTimeline(trace, now, protocol) {
+// fitWidth: the width available; the axes spread to fill it, so that the
+// drawing is not scaled up and takes less height.
+export function renderTimeline(trace, now, protocol, fitWidth = 0) {
   const { M, window: W, tTrans } = trace.params;
   const scale = timeScale(trace);
   const y = time => TOP + scale.y(time);
@@ -78,18 +81,23 @@ export function renderTimeline(trace, now, protocol) {
   const rows = senderRows(trace, y);
   const extra = rows.map(r => Math.max(0, r.snap.base - 1 - (r.confirmed[0] ?? Infinity)));
   const sendRow = protocol.showBuffer ? (Math.max(0, ...extra) * BOX) + rowWidth + GAP : 0;
-  const SX = Math.max(240, 20 + sendRow + labelWidth + 6 + cols * COL + 16);  // sender axis
-  const RX = SX + 300;                                                        // receiver axis
+  const SX = Math.max(240, SIDE + 8 + sendRow + labelWidth + 6 + cols * COL + 16);  // sender axis
   const timerX = abs => SX - 16 - (cols - 1 - (abs % cols)) * COL;
   const labelX = SX - 16 - cols * COL - 6;   // right edge of the sender labels
   const sendRowX = labelX - labelWidth - GAP - rowWidth;
 
-  // Receiver lines. A note belongs to the ACK sent at the same instant.
+  // Receiver lines, right of its axis. A note belongs to the ACK sent at the
+  // same instant.
   const acks = trace.transmissions.filter(tx => tx.kind === 'ack');
+  const recvRowDX = 16 + maxWidth(acks.map(tx => `ack ${tx.seq}`)) + GAP;
+  const noteDX = recvRowDX + (protocol.showReceiverBuffer ? recvBoxCount(trace.params) * BOX + GAP : 0);
+  const right = Math.max(140, noteDX + maxWidth(trace.notes.map(n => t(`note.${n.text}`)), NOTE_FONT, true) + 20);
+  const RX = SX + Math.max(300, fitWidth - SX - right - SIDE);  // receiver axis
   const ackX = RX + 16;
-  const recvRowX = ackX + maxWidth(acks.map(tx => `ack ${tx.seq}`)) + GAP;
-  const noteX = recvRowX + (protocol.showReceiverBuffer ? recvBoxCount(trace.params) * BOX + GAP : 0);
-  const WIDTH = Math.max(RX + 140, noteX + maxWidth(trace.notes.map(n => t(`note.${n.text}`)), NOTE_FONT, true) + 20);
+  const recvRowX = RX + recvRowDX;
+  const noteX = RX + noteDX;
+  const WIDTH = RX + right + SIDE;
+  const END = WIDTH - SIDE;   // right edge of the drawing, before the name
   const height = y(trace.end) + 50;
   const out = [];
 
@@ -99,11 +107,14 @@ export function renderTimeline(trace, now, protocol) {
   out.push(`<defs>${marker('data')}${marker('ack')}${marker('idle')}
     <clipPath id="past"><rect x="0" y="0" width="${WIDTH}" height="${y(now)}"/></clipPath></defs>`);
 
+  // The names of the sides, upright at the outer edges, from the top of the
+  // axes down, so that they take no height.
+  const axisTop = TOP - 24;
   out.push(
-    `<text class="head" x="${SX}" y="28" text-anchor="middle">${t('sender')}</text>`,
-    `<text class="head" x="${RX}" y="28" text-anchor="middle">${t('receiver')}</text>`,
-    `<line class="axis" x1="${SX}" y1="${TOP - 24}" x2="${SX}" y2="${height - 10}"/>`,
-    `<line class="axis" x1="${RX}" y1="${TOP - 24}" x2="${RX}" y2="${height - 10}"/>`,
+    `<text class="head" transform="translate(${SIDE - 7},${axisTop}) rotate(-90)" text-anchor="end">${t('sender')}</text>`,
+    `<text class="head" transform="translate(${WIDTH - SIDE + 7},${axisTop}) rotate(90)">${t('receiver')}</text>`,
+    `<line class="axis" x1="${SX}" y1="${axisTop}" x2="${SX}" y2="${height - 10}"/>`,
+    `<line class="axis" x1="${RX}" y1="${axisTop}" x2="${RX}" y2="${height - 10}"/>`,
   );
 
   // Channel occupancy: each data message is a band between its first bit
@@ -208,8 +219,8 @@ export function renderTimeline(trace, now, protocol) {
   }
 
   // Current time
-  out.push(`<line class="playhead" x1="0" y1="${y(now)}" x2="${WIDTH}" y2="${y(now)}"/>`,
-    `<text class="time" x="${WIDTH - 6}" y="${y(now) - 5}" text-anchor="end">t = ${+now.toFixed(2)}</text>`);
+  out.push(`<line class="playhead" x1="${SIDE}" y1="${y(now)}" x2="${END}" y2="${y(now)}"/>`,
+    `<text class="time" x="${END - 6}" y="${y(now) - 5}" text-anchor="end">t = ${+now.toFixed(2)}</text>`);
 
   return { svg: out.join('\n'), width: WIDTH, height, playheadY: y(now) };
 }
