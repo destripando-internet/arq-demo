@@ -32,7 +32,7 @@ html { overflow-y: scroll; }
 
 body {
   margin: 0 auto;
-  max-width: 980px;
+  max-width: 1440px;
   padding: 16px;
   background: var(--bg);
   color: var(--fg);
@@ -43,6 +43,32 @@ header.top { display: flex; justify-content: space-between; align-items: flex-st
 h1 { margin: 0 0 4px; font-size: 1.5rem; font-weight: 700; }
 h1 .version { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
 .hint { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
+
+/* Simulation: controls and state on the left, the diagram on the right,
+   which stays in view while the left column scrolls. The splitter between
+   them sets --side; the diagram keeps at least 380px. One column when narrow. */
+.sim:not([hidden]) {
+  display: grid; gap: 5px; align-items: start;
+  grid-template-columns: clamp(300px, var(--side, 420px), calc(100% - 400px)) 10px minmax(0, 1fr);
+}
+.sim-main { position: sticky; top: 8px; }
+.sim-split { align-self: stretch; position: relative; cursor: col-resize; touch-action: none; }
+.sim-split::before {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 4px;
+  border-left: 2px solid var(--border); border-radius: 1px;
+}
+.sim-split:hover::before, .sim-split:focus-visible::before, .sim.resizing .sim-split::before {
+  border-left-color: var(--ack);
+}
+.sim-split:focus-visible { outline: none; }
+.sim.resizing { cursor: col-resize; user-select: none; }
+@media (max-width: 1000px) {
+  .sim:not([hidden]) { grid-template-columns: minmax(0, 1fr); }
+  .sim-main { position: static; }
+  .sim-split { display: none; }
+}
+/* The other tabs keep a readable line length. */
+.demos, .guide { max-width: 980px; }
 
 #controls { display: flex; flex-direction: column; gap: 10px; }
 .groups { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -86,7 +112,7 @@ fieldset.group .line { display: flex; flex-wrap: wrap; gap: 8px 14px; align-item
   color: var(--bs-body-color);
 }
 .diagram-hint { margin: 0 0 4px; font-size: 0.85rem; }
-.player { display: flex; align-items: center; gap: 14px; }
+.player { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .clock-readout { font-variant-numeric: tabular-nums; color: var(--muted); }
 .clock-readout .bad { color: var(--bad); }
 #controls .form-control.invalid, #controls .form-select.invalid {
@@ -126,12 +152,13 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 #state .hint { margin-top: 4px; font-size: 0.8rem; }
 
 #timeline-wrap {
-  max-height: 70vh;
+  max-height: calc(100vh - 110px);
   overflow-y: scroll;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
 #timeline-wrap.failed { border: 2px solid var(--bad); }
+@media (max-width: 1000px) { #timeline-wrap { max-height: 70vh; } }
 #timeline { display: block; width: 100%; height: auto; }
 
 /* SVG */

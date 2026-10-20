@@ -18,6 +18,7 @@ const PX_PER_SECOND = 75;
 const playbackRate = ({ tTrans, tProp }) => PX_PER_SECOND / (1 + 0.25 * Math.log2(1 + tProp / tTrans));
 const FIELDS = ['k', 'w', 'n', 'tt', 'd', 'to', 'r', 'ack'];
 const LANG_KEY = 'arq-demo.lang';
+const SIDE_KEY = 'arq-demo.side';  // width of the left column of the simulation
 
 const form = document.getElementById('controls');
 const f = form.elements;
@@ -32,6 +33,8 @@ const hint = document.getElementById('diagram-hint');
 const guide = document.getElementById('tab-guide');
 const demoBox = document.getElementById('demo');
 const demoList = document.getElementById('tab-demos');
+const simTab = document.getElementById('tab-sim');
+const splitter = simTab.querySelector('.sim-split');
 const tape = createTape(document.getElementById('tape'));
 
 let protocol, trace, times, analysis, scale;
@@ -343,6 +346,48 @@ langBar.addEventListener('click', e => {
   applyLang(code);
   draw();
 });
+
+// Splitter between the columns of the simulation: drag it, or use the arrow
+// keys, to share the width; double-click restores it. The CSS keeps it within
+// limits; the width each viewer chooses is remembered.
+const sideWidth = () => simTab.querySelector('.sim-side').getBoundingClientRect().width;
+const setSide = px => simTab.style.setProperty('--side', `${Math.round(px)}px`);
+
+function saveSide() {
+  setSide(sideWidth());  // what the limits let through
+  try { localStorage.setItem(SIDE_KEY, Math.round(sideWidth())); } catch {}
+}
+
+splitter.addEventListener('pointerdown', e => {
+  const start = sideWidth() - e.clientX;
+  const move = ev => setSide(start + ev.clientX);
+  splitter.setPointerCapture(e.pointerId);
+  simTab.classList.add('resizing');
+  splitter.addEventListener('pointermove', move);
+  splitter.addEventListener('lostpointercapture', () => {
+    splitter.removeEventListener('pointermove', move);
+    simTab.classList.remove('resizing');
+    saveSide();
+  }, { once: true });
+});
+
+splitter.addEventListener('keydown', e => {
+  const step = { ArrowLeft: -20, ArrowRight: 20 }[e.key];
+  if (!step) return;
+  e.preventDefault();
+  setSide(sideWidth() + step);
+  saveSide();
+});
+
+splitter.addEventListener('dblclick', () => {
+  simTab.style.removeProperty('--side');
+  try { localStorage.removeItem(SIDE_KEY); } catch {}
+});
+
+try {
+  const side = +localStorage.getItem(SIDE_KEY);
+  if (side > 0) setSide(side);
+} catch {}
 
 // The scenario as URL parameters:
 // p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&r=0&l=d1.1,-a2
