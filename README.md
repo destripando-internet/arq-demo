@@ -26,7 +26,7 @@ from one of the [demos](#demos).
 - Link presets: the book's figures (a = 1), a 100 m LAN, 1000 km of fibre
   and a geostationary satellite (times in ms). Long waits are drawn
   compressed.
-- «Initial scenario» loads the example of each protocol, with its losses.
+- After changing a demo, «Restore», in its box, loads it again.
 - The app opens on the «Demos» tab, the list of [demos](#demos) by section;
   choosing one loads it in the «Simulation» tab.
 - The «Guide» tab explains the legend, the constraints and the utilisation.
@@ -57,7 +57,7 @@ Times are abstract units, except with the real link presets (ms).
 
 - **S1** [Lost message and lost ACK](https://destripando-internet.github.io/arq-demo/?demo=S1). Message 1 is lost: its timer expires and the sender retransmits it. Then the ACK of the second message 0 is lost, so the sender retransmits that one too and the receiver gets a duplicate. It discards it but confirms it anyway; otherwise the sender would retransmit it forever.
 - **S2** [Timer shorter than the RTT](https://destripando-internet.github.io/arq-demo/?demo=S2). The timer (2) is shorter than the RTT (3). Nothing is lost, but every message is retransmitted before its ACK can arrive. The receiver discards and confirms the duplicates, and the sender ignores the repeated ACKs (dashed) thanks to their number. It works, with twice as many transmissions.
-- **S3** [Stop-and-wait utilisation](https://destripando-internet.github.io/arq-demo/?demo=S3). With a = Tprop / Ttrans = 2, the sender spends most of the time waiting for ACKs: U = 1 / (1 + 2a) = 0.2. The channel is busy only a fifth of the time (the grey bands).
+- **S3** [Stop-and-wait utilisation](https://destripando-internet.github.io/arq-demo/?demo=S3). With a = t<sub>prop</sub> / t<sub>trans</sub> = 2, the sender spends most of the time waiting for ACKs: U = 1 / (1 + 2a) = 0.2. The channel is busy only a fifth of the time (the grey bands).
 
 ### Go-back-N
 
@@ -87,7 +87,7 @@ Individual ACKs by default; cumulative ACKs are an option («ACKs»). When a tim
 
 - **B1** [Window large enough: full channel](https://destripando-internet.github.io/arq-demo/?demo=B1). a = 2 and Ws = 5 = 1 + 2a: the ACKs arrive just in time and the sender never stops. The transmission bands touch each other: theoretical U = 1.
 - **B2** [Window too small](https://destripando-internet.github.io/arq-demo/?demo=B2). a = 2 and Ws = 3 < 1 + 2a = 5: the sender sends its window and waits for the first ACK. There are gaps between the bands: theoretical U = 3/5 = 0.6.
-- **B3** [Message size does not change the bandwidth × delay product](https://destripando-internet.github.io/arq-demo/?demo=B3). Fibre, 1000 km, at R = 10 Mb/s with 500-byte messages (times in ms): Ttrans = 0.4 and Tprop = 5, so a = 12.5 and the window must hold 1 + 2a = 26 messages; with Ws = 26 the channel is full. With 1000-byte messages, a would be 6.25 and 14 messages would do. The data in flight is the same: BDP = R · 2·Tprop = 100 kbit = 12.5 KB, that is 25 messages of 500 bytes or 12.5 of 1000. It depends on the rate and the delay, not on the message size.
+- **B3** [Message size does not change the bandwidth × delay product](https://destripando-internet.github.io/arq-demo/?demo=B3). Fibre, 1000 km, at R = 10 Mb/s with 500-byte messages (times in ms): t<sub>trans</sub> = 0.4 and t<sub>prop</sub> = 5, so a = 12.5 and the window must hold 1 + 2a = 26 messages; with Ws = 26 the channel is full. With 1000-byte messages, a would be 6.25 and 14 messages would do. The data in flight is the same: BDP = R · 2·t<sub>prop</sub> = 100 kbit = 12.5 KB, that is 25 messages of 500 bytes or 12.5 of 1000. It depends on the rate and the delay, not on the message size.
 - **B4** [Fibre link, go-back-N](https://destripando-internet.github.io/arq-demo/?demo=B4). Fibre, 1000 km (times in ms): a = 6.25 and 1 + 2a = 13.5. With k = 4, go-back-N allows Ws = 14 ≤ 15 and the channel is fully used.
 - **B5** [Fibre link, selective repeat with k = 4](https://destripando-internet.github.io/arq-demo/?demo=B5). Fibre, 1000 km (times in ms), selective repeat with k = 4 and Ws = 14: the largest window is 2^(k−1) = 8, so Ws = 14 is not valid. Losing the first ACK is enough for the retransmission of 0 to be delivered as a new message.
 - **B6** [Fibre link, selective repeat with k = 5](https://destripando-internet.github.io/arq-demo/?demo=B6). Fibre, 1000 km (times in ms), selective repeat with k = 5 and Ws = 14 ≤ 2^(k−1) = 16: the window is valid. The first ACK is lost and 0 is retransmitted; the receiver correctly recognises the retransmission as a duplicate. For the same window, selective repeat needs one more bit than go-back-N.
@@ -138,7 +138,7 @@ shown complete:
 | `k` | sequence number bits |
 | `w` | send window Ws |
 | `n` | number of messages |
-| `tt`, `d` | Ttrans and Tprop |
+| `tt`, `d` | t<sub>trans</sub> and t<sub>prop</sub> |
 | `to` | retransmission timer |
 | `r` | random loss probability (%) |
 | `ack` | `cumulative` or `individual` (go-back-N and selective repeat) |

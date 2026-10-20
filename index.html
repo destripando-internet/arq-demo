@@ -4,11 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ARQ protocols</title>
-  <!-- Bootstrap follows the system's light/dark preference. -->
-  <script>
-    document.documentElement.dataset.bsTheme =
-      matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="style.css">
@@ -42,7 +37,7 @@
         <div class="line">
           <label><span data-i18n="protocol"></span>
             <select name="p" class="form-select form-select-sm"></select></label>
-          <label><span data-i18n="ack"></span>
+          <label data-i18n-title="ack.title"><span data-i18n="ack"></span>
             <select name="ack" class="form-select form-select-sm"></select></label>
         </div>
         <div class="line">
@@ -62,9 +57,9 @@
             <select name="link" class="form-select form-select-sm"></select></label>
         </div>
         <div class="line">
-          <label data-i18n-title="tt.title"><span>T<sub>trans</sub></span>
+          <label data-i18n-title="tt.title"><span>t<sub>trans</sub></span>
             <input name="tt" type="number" min="0.1" max="20" step="any" class="form-control form-control-sm"></label>
-          <label data-i18n-title="d.title"><span>T<sub>prop</sub></span>
+          <label data-i18n-title="d.title"><span>t<sub>prop</sub></span>
             <input name="d" type="number" min="0" max="1000" step="any" class="form-control form-control-sm"></label>
           <label data-i18n-title="calc.title">a <output id="calc-a" class="calc"></output></label>
           <label data-i18n-title="calc.title">1 + 2a <output id="calc-2a" class="calc"></output></label>
@@ -75,12 +70,6 @@
           <label><span data-i18n="loss"></span>
             <input name="r" type="range" min="0" max="50" step="5" value="0" class="form-range">
             <output for="r" data-unit="%"></output></label>
-        </div>
-        <div class="line">
-          <button type="button" class="btn btn-sm btn-outline-primary" data-act="book" data-i18n-title="book.title">
-            <i class="bi bi-arrow-counterclockwise"></i> <span data-i18n="book"></span></button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" data-act="clear" data-i18n-title="clear.title">
-            <i class="bi bi-eraser"></i> <span data-i18n="clear"></span></button>
         </div>
       </fieldset>
     </div>

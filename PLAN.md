@@ -148,7 +148,7 @@ not specific or contradicts itself; see «Protocol decisions» in
 - **Channel occupancy**: each data message is a band that lasts Ttrans.
 - **Controls**, in two groups: *Algorithm* (protocol, k, Ws, ACK mode,
   timer) and *Scenario* (link, Ttrans, Tprop, messages, random loss,
-  playback speed, initial scenario, clear losses); a playback bar (start,
+  playback speed); a playback bar (start,
   previous event, play/pause, next event, end); clicks on the arrows to lose
   or deliver them.
 - **Tabs**: *Demos* (the list of demos, where the app opens), *Simulation*
@@ -158,7 +158,8 @@ not specific or contradicts itself; see «Protocol decisions» in
 
 ## Phases
 
-- **Phase 0 — Skeleton.** Layout and colour tokens (light/dark). Done.
+- **Phase 0 — Skeleton.** Layout and colour tokens (light only; the dark
+  mode was removed). Done.
 - **Phase 1 — Engine + stop-and-wait.** Done.
 - **Phase 2 — Sliding window.** Go-back-N and selective repeat, send and
   receive buffers, parameter controls. Done.

@@ -68,6 +68,15 @@ function fillSelect(select, options, selected = select.value) {
 function fillAckModes(proto, selected) {
   fillSelect(f.ack, proto.ackModes.map(m => [m, t(`ack.${m}`)]), selected);
   f.ack.disabled = proto.ackModes.length === 1;
+  fixedTitle(f.ack, f.ack.disabled);
+}
+
+// Tooltip of a field, saying so when the protocol fixes its value; it keeps
+// the right text after a change of language.
+function fixedTitle(input, fixed) {
+  const label = input.closest('label');
+  label.dataset.i18nTitle = `${input.name}.title${fixed ? '.fixed' : ''}`;
+  label.title = t(label.dataset.i18nTitle);
 }
 
 // The link select shows the preset matching Ttrans and Tprop, or «custom».
@@ -85,6 +94,7 @@ function loadParams(proto, params = {}) {
   f.d.value = p.tProp;
   f.to.value = p.timeout;
   f.k.disabled = f.w.disabled = !!proto.fixed;
+  for (const input of [f.k, f.w]) fixedTitle(input, proto.fixed);
   fillAckModes(proto, p.ack);
   showLink();
 }
@@ -133,7 +143,8 @@ function renderDemo() {
     </div>
     <p>${demo.text[lang()]}</p>
     ${changed ? `<p class="demo-changed">${t('demo.modified')}
-      <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-demo="restore">${t('demo.restore')}</button></p>` : ''}`;
+      <button type="button" class="btn btn-sm btn-outline-primary" data-demo="restore">
+        <i class="bi bi-arrow-counterclockwise"></i> ${t('demo.restore')}</button></p>` : ''}`;
 }
 
 demoBox.addEventListener('click', e => {
@@ -242,19 +253,6 @@ const actions = {
     setPlaying(false);
     now = trace.end;
     draw();
-  },
-  book() {
-    const { params, losses: keys } = protocol.book;
-    loadParams(protocol, { ack: f.ack.value, ...params });
-    f.r.value = 0;
-    losses = new Map(keys.map(k => [k, true]));
-    now = START;
-    rerun();
-    setPlaying(true);
-  },
-  clear() {
-    losses.clear();
-    rerun();
   },
 };
 

@@ -25,62 +25,6 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #161615;
-    --panel: #22221f;
-    --fg: #e8e8e3;
-    --muted: #9a9a92;
-    --line: #e8e8e3;
-    --ack: #7fb0f0;
-    --ack-idle: #5f7a9c;
-    --sent: #8c4a4a;
-    --unsent: #4f7f2f;
-    --ready: #4f7f2f;
-    --held: #6c519f;
-    --acked: #2c4466;
-    --window: #e0a800;
-    --start: #5fae2e;
-    --expire: #d85a5a;
-    --bad: #ff7a7a;
-    --bad-bg: #3a1d1d;
-    --warn: #f0c060;
-    --warn-bg: #352a12;
-    --ok: #7fcf7f;
-    --band: rgba(232, 232, 227, 0.08);
-    --playhead: #ff8a3d;
-    --border: #3a3a36;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg: #161615;
-  --panel: #22221f;
-  --fg: #e8e8e3;
-  --muted: #9a9a92;
-  --line: #e8e8e3;
-  --ack: #7fb0f0;
-  --ack-idle: #5f7a9c;
-  --sent: #8c4a4a;
-  --unsent: #4f7f2f;
-  --ready: #4f7f2f;
-  --held: #6c519f;
-  --acked: #2c4466;
-  --window: #e0a800;
-  --start: #5fae2e;
-  --expire: #d85a5a;
-  --bad: #ff7a7a;
-  --bad-bg: #3a1d1d;
-  --warn: #f0c060;
-  --warn-bg: #352a12;
-  --ok: #7fcf7f;
-  --band: rgba(232, 232, 227, 0.08);
-  --playhead: #ff8a3d;
-  --border: #3a3a36;
-  color-scheme: dark;
-}
-
 * { box-sizing: border-box; }
 
 /* Always show the scrollbar, so the width does not depend on the height. */
@@ -129,13 +73,16 @@ fieldset.group legend {
 #controls .form-select { width: auto; }
 #controls .form-range { width: 110px; }
 fieldset.group .line { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+/* Computed values (a, 1 + 2a): drawn as a disabled form-control-sm. */
 .calc {
   min-width: 4.2em;
-  padding: 2px 8px;
-  border: 1px dashed var(--border);
-  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius-sm);
+  background-color: var(--bs-secondary-bg);
   font-size: 0.875rem;
-  color: var(--fg);
+  line-height: 1.5;
+  color: var(--bs-body-color);
 }
 .diagram-hint { margin: 0 0 4px; font-size: 0.85rem; }
 .player { display: flex; align-items: center; gap: 14px; }
@@ -284,7 +231,10 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .demo-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .demo h2 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 700; }
 .demo p { margin: 0; }
-.demo .demo-changed { margin-top: 6px; color: var(--muted); font-size: 0.9rem; }
+.demo .demo-changed {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin-top: 6px; color: var(--muted); font-size: 0.9rem;
+}
 
 /* Tabs, list of demos and guide */
 #tabs { margin-bottom: 12px; }

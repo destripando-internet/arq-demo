@@ -56,8 +56,8 @@ export const DEMOS = [
     id: 'S3', query: 'p=saw&n=6&tt=1&d=2&to=7',
     title: { en: 'Stop-and-wait utilisation', es: 'Aprovechamiento de parada y espera' },
     text: {
-      en: 'With a = Tprop / Ttrans = 2, the sender spends most of the time waiting for ACKs: U = 1 / (1 + 2a) = 0.2. The channel is busy only a fifth of the time (the grey bands).',
-      es: 'Con a = Tprop / Ttrans = 2, el emisor pasa la mayor parte del tiempo esperando confirmaciones: U = 1 / (1 + 2a) = 0.2. El canal solo está ocupado una quinta parte del tiempo (las franjas grises).',
+      en: 'With a = t<sub>prop</sub> / t<sub>trans</sub> = 2, the sender spends most of the time waiting for ACKs: U = 1 / (1 + 2a) = 0.2. The channel is busy only a fifth of the time (the grey bands).',
+      es: 'Con a = t<sub>prop</sub> / t<sub>trans</sub> = 2, el emisor pasa la mayor parte del tiempo esperando confirmaciones: U = 1 / (1 + 2a) = 0.2. El canal solo está ocupado una quinta parte del tiempo (las franjas grises).',
     },
   },
   {
@@ -168,8 +168,8 @@ export const DEMOS = [
     id: 'B3', query: 'p=gbn&k=5&w=26&n=40&tt=0.4&d=5&to=15',
     title: { en: 'Message size does not change the bandwidth × delay product', es: 'El tamaño del mensaje no cambia el producto ancho de banda × retardo' },
     text: {
-      en: 'Fibre, 1000 km, at R = 10 Mb/s with 500-byte messages (times in ms): Ttrans = 0.4 and Tprop = 5, so a = 12.5 and the window must hold 1 + 2a = 26 messages; with Ws = 26 the channel is full. With 1000-byte messages, a would be 6.25 and 14 messages would do. The data in flight is the same: BDP = R · 2·Tprop = 100 kbit = 12.5 KB, that is 25 messages of 500 bytes or 12.5 of 1000. It depends on the rate and the delay, not on the message size.',
-      es: 'Fibra de 1000 km a R = 10 Mb/s con mensajes de 500 bytes (tiempos en ms): Ttrans = 0.4 y Tprop = 5, así que a = 12.5 y en la ventana deben caber 1 + 2a = 26 mensajes; con Ws = 26 el canal se llena. Con mensajes de 1000 bytes, a sería 6.25 y bastarían 14. Los datos en vuelo son los mismos: BDP = R · 2·Tprop = 100 kbit = 12.5 KB, es decir, 25 mensajes de 500 bytes o 12.5 de 1000. Depende de la velocidad y del retardo, no del tamaño del mensaje.',
+      en: 'Fibre, 1000 km, at R = 10 Mb/s with 500-byte messages (times in ms): t<sub>trans</sub> = 0.4 and t<sub>prop</sub> = 5, so a = 12.5 and the window must hold 1 + 2a = 26 messages; with Ws = 26 the channel is full. With 1000-byte messages, a would be 6.25 and 14 messages would do. The data in flight is the same: BDP = R · 2·t<sub>prop</sub> = 100 kbit = 12.5 KB, that is 25 messages of 500 bytes or 12.5 of 1000. It depends on the rate and the delay, not on the message size.',
+      es: 'Fibra de 1000 km a R = 10 Mb/s con mensajes de 500 bytes (tiempos en ms): t<sub>trans</sub> = 0.4 y t<sub>prop</sub> = 5, así que a = 12.5 y en la ventana deben caber 1 + 2a = 26 mensajes; con Ws = 26 el canal se llena. Con mensajes de 1000 bytes, a sería 6.25 y bastarían 14. Los datos en vuelo son los mismos: BDP = R · 2·t<sub>prop</sub> = 100 kbit = 12.5 KB, es decir, 25 mensajes de 500 bytes o 12.5 de 1000. Depende de la velocidad y del retardo, no del tamaño del mensaje.',
     },
   },
   {
