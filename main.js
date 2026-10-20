@@ -4,7 +4,7 @@ import { LINKS, linkFor } from './sim/links.js';
 import { PROTOCOLS, byId } from './protocols/index.js';
 import { renderTimeline, eventTimes } from './ui/timeline.js';
 import { timeScale } from './ui/timescale.js';
-import { renderState, progress, num } from './ui/state.js';
+import { renderState, num } from './ui/state.js';
 import { renderGuide } from './ui/guide.js';
 import { LANGS, lang, setLang, t } from './ui/i18n.js';
 import { GROUPS, demoById, demosIn } from './ui/demos.js';
@@ -25,8 +25,9 @@ const f = form.elements;
 const svg = document.getElementById('timeline');
 const panel = document.getElementById('state');
 const wrap = document.getElementById('timeline-wrap');
-const clockOut = document.getElementById('clock');
-const playBtn = form.querySelector('[data-act=play]');
+const player = document.getElementById('player');
+const speed = player.querySelector('[name=speed]');
+const playBtn = player.querySelector('[data-act=play]');
 const langBar = document.getElementById('lang');
 const tabs = document.getElementById('tabs');
 const guide = document.getElementById('tab-guide');
@@ -190,7 +191,6 @@ function draw() {
   svg.setAttribute('height', r.height);
   svg.innerHTML = r.svg;
   panel.innerHTML = renderState(trace, analysis);
-  clockOut.innerHTML = progress(trace, now);
   tape.update(now);
   if (playing) {
     const yPx = r.playheadY * svg.clientWidth / r.width;
@@ -203,7 +203,7 @@ function tick(ts) {
   if (!playing) return;
   const dt = lastFrame ? (ts - lastFrame) / 1000 : 0;
   lastFrame = ts;
-  const py = scale.y(now) + dt * playbackRate(trace.params) * +f.speed.value;
+  const py = scale.y(now) + dt * playbackRate(trace.params) * +speed.value;
   now = Math.min(trace.end, scale.time(py));
   draw();
   if (now >= trace.end) setPlaying(false);
@@ -252,13 +252,12 @@ const actions = {
   },
 };
 
-form.addEventListener('click', e => {
+player.addEventListener('click', e => {
   const act = e.target.closest('[data-act]')?.dataset.act;
   if (act) actions[act]();
 });
 
 form.addEventListener('input', e => {
-  if (e.target === f.speed) return;
   if (e.target === f.p) {
     loadParams(byId(f.p.value));
     losses.clear();

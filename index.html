@@ -73,24 +73,6 @@
         </div>
       </fieldset>
     </div>
-
-    <div class="player">
-      <div class="btn-group" role="group">
-        <button type="button" class="btn btn-outline-secondary" data-act="reset" data-i18n-title="reset"><i class="bi bi-skip-backward-fill"></i></button>
-        <button type="button" class="btn btn-outline-secondary" data-act="prev" data-i18n-title="prev"><i class="bi bi-skip-start-fill"></i></button>
-        <button type="button" class="btn btn-primary" data-act="play" data-i18n-title="play"><i class="bi bi-play-fill"></i></button>
-        <button type="button" class="btn btn-outline-secondary" data-act="step" data-i18n-title="step"><i class="bi bi-skip-end-fill"></i></button>
-        <button type="button" class="btn btn-outline-secondary" data-act="end" data-i18n-title="end"><i class="bi bi-skip-forward-fill"></i></button>
-      </div>
-      <label><span data-i18n="speed"></span>
-        <select name="speed" class="form-select form-select-sm">
-          <option value="0.5">0.5×</option>
-          <option value="1" selected>1×</option>
-          <option value="2">2×</option>
-          <option value="4">4×</option>
-        </select></label>
-      <span id="clock" class="clock-readout"></span>
-    </div>
   </form>
 
   <section id="state"></section>
@@ -100,6 +82,23 @@
        data-i18n-title="split.title" data-i18n-aria="split.title"></div>
 
   <div class="sim-main">
+  <div class="player" id="player">
+    <div class="btn-group" role="group">
+      <button type="button" class="btn btn-outline-secondary" data-act="reset" data-i18n-title="reset"><i class="bi bi-skip-backward-fill"></i></button>
+      <button type="button" class="btn btn-outline-secondary" data-act="prev" data-i18n-title="prev"><i class="bi bi-skip-start-fill"></i></button>
+      <button type="button" class="btn btn-primary" data-act="play" data-i18n-title="play"><i class="bi bi-play-fill"></i></button>
+      <button type="button" class="btn btn-outline-secondary" data-act="step" data-i18n-title="step"><i class="bi bi-skip-end-fill"></i></button>
+      <button type="button" class="btn btn-outline-secondary" data-act="end" data-i18n-title="end"><i class="bi bi-skip-forward-fill"></i></button>
+    </div>
+    <label><span data-i18n="speed"></span>
+      <select name="speed" class="form-select form-select-sm">
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option>
+        <option value="2">2×</option>
+        <option value="4">4×</option>
+      </select></label>
+  </div>
+
   <section id="tape" class="tape"></section>
 
   <div id="timeline-wrap">

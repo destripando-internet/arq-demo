@@ -103,7 +103,6 @@ fieldset.group legend {
 #controls input[type=number]::-webkit-inner-spin-button,
 #controls input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 #controls .form-select { width: auto; }
-#controls select[name=speed] { text-align: right; }
 fieldset.group .line { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 /* Computed values (a, 1 + 2a): drawn as a disabled form-control-sm. */
 .calc {
@@ -117,9 +116,10 @@ fieldset.group .line { display: flex; flex-wrap: wrap; gap: 8px 14px; align-item
   line-height: 1.5;
   color: var(--bs-body-color);
 }
-.player { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
-.clock-readout { font-variant-numeric: tabular-nums; color: var(--muted); }
-.clock-readout .bad { color: var(--bad); }
+/* Playback bar, centred above the diagram */
+.player { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 14px; margin: 0 0 8px; }
+.player label { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+.player .form-select { width: auto; text-align: right; }
 #controls .form-control.invalid, #controls .form-select.invalid {
   border: 2px solid var(--bad);
   background-color: var(--bad-bg);
@@ -157,7 +157,7 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 #state .hint { margin-top: 4px; font-size: 0.8rem; }
 
 #timeline-wrap {
-  max-height: calc(100vh - 86px);
+  max-height: calc(100vh - 132px);
   overflow-y: scroll;
   border: 1px solid var(--border);
   border-radius: 8px;

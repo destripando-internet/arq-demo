@@ -19,18 +19,6 @@ export function renderState(trace, an) {
     </div>`;
 }
 
-// «confirmed … · delivered …» at the current time.
-export function progress(trace, now) {
-  let snap = trace.snapshots[0];
-  for (const s of trace.snapshots) if (s.t <= now) snap = s;
-  // Deliveries of a message other than the one due (accepted duplicates)
-  const wrong = trace.deliveries.filter((d, i) => d.t <= now && d.abs !== i).length;
-  const text = t('progress', {
-    confirmed: snap.base, delivered: snap.delivered, count: trace.params.count,
-  });
-  return text + (wrong ? ` <strong class="bad">${t('wrong', { n: wrong })}</strong>` : '');
-}
-
 const ICON = { ok: '✓', warn: '⚠', error: '✗' };
 
 function alerts(an, M) {

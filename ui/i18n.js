@@ -41,9 +41,6 @@ const TEXTS = {
     'demo.modified': 'You have changed the scenario of this demo.',
     'demo.restore': 'Restore',
     'demo.close': 'Close',
-    'progress': ({ confirmed, delivered, count }) =>
-      `confirmed ${confirmed}/${count} · delivered ${delivered}/${count}`,
-    'wrong': ({ n }) => `(${n} wrong)`,
 
     'proto.saw': 'Stop-and-wait',
     'proto.gbn': 'Go-back-N',
@@ -185,9 +182,6 @@ const TEXTS = {
     'demo.modified': 'Has cambiado el escenario de esta demo.',
     'demo.restore': 'Restablecer',
     'demo.close': 'Cerrar',
-    'progress': ({ confirmed, delivered, count }) =>
-      `confirmados ${confirmed}/${count} · entregados ${delivered}/${count}`,
-    'wrong': ({ n }) => `(${n} ${n === 1 ? 'erróneo' : 'erróneos'})`,
 
     'proto.saw': 'Parada y espera',
     'proto.gbn': 'Repetición continua',
