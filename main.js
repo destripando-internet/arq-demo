@@ -36,6 +36,8 @@ const demoList = document.getElementById('tab-demos');
 const simTab = document.getElementById('tab-sim');
 const splitter = simTab.querySelector('.sim-split');
 const tape = createTape(document.getElementById('tape'));
+// The tape takes the scale of the diagram, which follows the width of its column.
+new ResizeObserver(() => tape.scale(svg.clientWidth / +svg.getAttribute('width'))).observe(svg);
 
 let protocol, trace, times, analysis, scale;
 let losses = new Map();  // key → true (lose) / false (deliver)
@@ -214,6 +216,7 @@ function draw() {
   svg.setAttribute('width', r.width);
   svg.setAttribute('height', r.height);
   svg.innerHTML = r.svg;
+  tape.scale(svg.clientWidth / r.width);
   markHover();
   panel.innerHTML = renderState(trace, analysis);
   tape.update(now);

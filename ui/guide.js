@@ -4,7 +4,7 @@
 
 import { t } from './i18n.js';
 import { clock, bufferRow } from './timeline.js';
-import { CELL } from './tape.js';
+import { cellStyle, frameStyle } from './tape.js';
 
 const icon = (w, h, body) =>
   `<svg class="legend-icon" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${body}</svg>`;
@@ -39,8 +39,8 @@ const sendBuffer = () => icon(84, 26, bufferRow(2, 6, [
 ], 3));
 // Static sample of the tape: 0 confirmed, 1 and 2 sent, 3 not sent yet.
 const tapeSample = () => `<div class="tape-strip legend-tape">${['done', 'sent', 'sent', 'unsent']
-  .map((state, i) => `<span class="tcell ${state}" style="left:${i * CELL + 5}px">${i}</span>`).join('')}
-  <div class="tape-window" style="left:${CELL}px;width:${2 * CELL + 22 + 10}px"></div></div>`;
+  .map((state, i) => `<span class="tcell ${state}" style="${cellStyle(i)}">${i}</span>`).join('')}
+  <div class="tape-window" style="${frameStyle(1, 3)}"></div></div>`;
 const recvBuffer = () => icon(148, 24, bufferRow(2, 3, [
   { seq: 1 }, { seq: 2, state: 'ready' }, { seq: 3, state: 'ready' }, { seq: 4, state: 'free' },
   { seq: 5, state: 'held' }, { seq: 6, state: 'free' }, { seq: 7, state: 'free' }, { seq: 0 }, { seq: 1 },

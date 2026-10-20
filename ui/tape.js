@@ -1,15 +1,21 @@
 // «Tape» of the sender, above the diagram: every message in order, labelled
-// with its sequence number, evenly spaced, and the send window as an orange
-// frame that
+// with its sequence number, and the send window as an orange frame that
 // slides over them as ACKs arrive. It follows the playback: a cell turns red
 // when its message leaves, flashes blue when an ACK confirms it and then
 // stays without colour; the frame glides to its new place.
+//
+// It is drawn as the buffer rows of the diagram (ui/timeline.js), in its
+// units: cells 16 apart that share their borders, and the frame 2.5 wide
+// around them. The diagram is scaled to the width of its column, and --u is
+// one of its units on screen (see scale()).
 
 import { t } from './i18n.js';
 
-export const CELL = 30;  // px per message: a 22 px cell and an 8 px gap
-const BOX = 22;
-const PAD = 5;           // from the cells to the inner edge of the frame
+const BOX = 16;  // from one cell to the next
+const OFF = 2;   // room left of the first cell for the frame
+const u = n => `calc(${n} * var(--u))`;
+export const cellStyle = abs => `left:${u(abs * BOX + OFF)}`;
+export const frameStyle = (base, W) => `left:${u(base * BOX + OFF - 1.75)};width:${u(W * BOX + 4.5)}`;
 
 // Sender state at time `now`: base and confirmed messages from the last
 // message leaving or ACK arriving (at the same instant, the departure, whose
@@ -48,20 +54,27 @@ export function createTape(root) {
   const title = root.querySelector('.tape-title');
   const scroller = root.querySelector('.tape-scroll');
   const strip = root.querySelector('.tape-strip');
-  let trace = null, cells = [], frame = null, x = null;
+  let trace = null, cells = [], frame = null, unit = 1;
   let prevNow = null, prevStates = [], prevBase = null;
+  root.style.setProperty('--u', '1px');
 
   return {
+    // Size on screen of one unit of the diagram, in px.
+    scale(px) {
+      if (!(px > 0) || px === unit) return;
+      unit = px;
+      root.style.setProperty('--u', `${px}px`);
+    },
+
     // New simulation: rebuild the strip.
     load(newTrace) {
       trace = newTrace;
       const { count, M, window: W } = trace.params;
-      x = abs => abs * CELL;
       // Empty slots after the last message, so the window always fits.
       const slots = count + W;
-      strip.style.width = `${x(slots - 1) + BOX + 2 * PAD}px`;
+      strip.style.width = u(slots * BOX + 1 + 2 * OFF);
       strip.innerHTML = Array.from({ length: slots }, (_, abs) =>
-        `<span class="tcell${abs >= count ? ' none' : ''}" style="left:${x(abs) + PAD}px">${abs % M}</span>`).join('')
+        `<span class="tcell${abs >= count ? ' none' : ''}" style="${cellStyle(abs)}">${abs % M}</span>`).join('')
         + '<div class="tape-window"></div>';
       cells = [...strip.querySelectorAll('.tcell')];
       frame = strip.querySelector('.tape-window');
@@ -91,10 +104,9 @@ export function createTape(root) {
       const W = trace.params.window;
       if (base !== prevBase) {
         frame.classList.toggle('instant', !forward);
-        frame.style.left = `${x(base)}px`;
-        frame.style.width = `${(W - 1) * CELL + BOX + 2 * PAD}px`;
+        frame.style.cssText = frameStyle(base, W);
         // Keep the window in view, a quarter from the left edge.
-        const left = x(base), right = x(base + W - 1) + BOX + 2 * PAD;
+        const left = base * BOX * unit, right = ((base + W) * BOX + 2 * OFF) * unit;
         if (left < scroller.scrollLeft || right > scroller.scrollLeft + scroller.clientWidth)
           scroller.scrollTo({ left: Math.max(0, left - scroller.clientWidth / 4), behavior: forward ? 'smooth' : 'auto' });
       }
