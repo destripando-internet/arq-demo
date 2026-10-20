@@ -22,6 +22,7 @@
   --band: rgba(29, 29, 27, 0.07);
   --playhead: #e05a00;
   --border: #d6d6d0;
+  --changed-bg: #e4edf9;  /* field changed from the loaded demo */
   color-scheme: light;
 }
 
@@ -120,6 +121,8 @@ fieldset.group .line { display: flex; flex-wrap: wrap; gap: 8px 14px; align-item
 .player { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 14px; margin: 0 0 8px; }
 .player label { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
 .player .form-select { width: auto; text-align: right; }
+/* A field changed from the loaded demo; the constraints' colours win. */
+#controls .changed:not(:disabled) { background-color: var(--changed-bg); }
 #controls .form-control.invalid, #controls .form-select.invalid {
   border: 2px solid var(--bad);
   background-color: var(--bad-bg);

@@ -41,6 +41,7 @@ let protocol, trace, times, analysis, scale;
 let losses = new Map();  // key → true (lose) / false (deliver)
 let demo = null;         // demo loaded with ?demo=ID, while its box is open
 let demoKey = '';        // its scenario, to tell whether it was changed
+let demoValues = {};     // its value of each field, to mark the ones changed
 // At rest, before anything happens: t = 0 already shows data 0 leaving.
 const START = -1e-6;
 let now = START;
@@ -113,6 +114,14 @@ function markInputs(an) {
   wrap.classList.toggle('failed', !!(an.failure || an.loop || an.unfinished));
 }
 
+// With a demo loaded, the fields whose value differs from the demo's (as
+// numbers: «1» and «1.0» are the same) get a soft background.
+function markChanged() {
+  const same = (a, b) => a === b || (a !== '' && b !== '' && +a === +b);
+  for (const name of ['p', ...FIELDS])
+    f[name].classList.toggle('changed', !!demo && !same(f[name].value, demoValues[name]));
+}
+
 function rerun() {
   protocol = byId(f.p.value);
   trace = simulate(protocol, { ...readParams(), forcedLosses: losses });
@@ -123,24 +132,39 @@ function rerun() {
   document.getElementById('calc-a').value = num(analysis.a);
   document.getElementById('calc-2a').value = +(1 + 2 * analysis.a).toPrecision(4);
   markInputs(analysis);
+  markChanged();
   now = Math.min(now, trace.end);
   writeUrl();
   renderDemo();
+  scheduleNotice();
   draw();
 }
 
-// Box with what the loaded demo shows, and a way back if it was changed.
+// Box with what the loaded demo shows, and a way back if it was changed. The
+// notice of a change comes (or goes) 2 s after the last edit, so that the box
+// does not grow and move the fields while one is being edited or wheeled.
+let demoNotice = false;
+let noticeTimer = 0;
+
+function scheduleNotice() {
+  clearTimeout(noticeTimer);
+  if (!demo) return;
+  noticeTimer = setTimeout(() => {
+    demoNotice = !!demo && stateKey() !== demoKey;
+    renderDemo();
+  }, 2000);
+}
+
 function renderDemo() {
   demoBox.hidden = !demo;
   if (!demo) return;
-  const changed = stateKey() !== demoKey;
   demoBox.innerHTML = `
     <div class="demo-head">
       <h2>${demo.id} · ${demo.title[lang()]}</h2>
       <button type="button" class="btn-close" data-demo="close" title="${t('demo.close')}" aria-label="${t('demo.close')}"></button>
     </div>
     <p>${demo.text[lang()]}</p>
-    ${changed ? `<p class="demo-changed">${t('demo.modified')}
+    ${demoNotice ? `<p class="demo-changed">${t('demo.modified')}
       <button type="button" class="btn btn-sm btn-outline-primary" data-demo="restore">
         <i class="bi bi-arrow-counterclockwise"></i> ${t('demo.restore')}</button></p>` : ''}`;
 }
@@ -273,6 +297,29 @@ form.addEventListener('input', e => {
   }
   rerun();
 });
+
+// The mouse wheel over a number field steps its value, as an edit would: by 1
+// in the integer fields; in the decimal ones (step="any") by the order of
+// magnitude of the value, so that 0.8 goes to 0.9 and 1, 9 to 10 and 20.
+function stepped(input, up) {
+  const v = +input.value || 0;
+  const ref = up ? v : v * 0.999;  // going down from 1 steps by 0.1
+  const step = input.step !== 'any' ? 1 : ref > 0 ? 10 ** Math.floor(Math.log10(ref)) : 1;
+  const next = +(v + (up ? step : -step)).toPrecision(12);
+  return Math.min(+input.max, Math.max(+input.min, next));
+}
+
+let wheelDelta = 0;  // trackpads send many small deltas: step every 40px
+form.addEventListener('wheel', e => {
+  const input = e.target.closest('input[type=number]');
+  if (!input || input.disabled) return;
+  e.preventDefault();
+  wheelDelta += e.deltaMode ? e.deltaY * 40 : e.deltaY;
+  if (Math.abs(wheelDelta) < 40) return;
+  input.value = stepped(input, wheelDelta < 0);
+  wheelDelta = 0;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}, { passive: false });
 
 svg.addEventListener('click', e => {
   const key = e.target.closest('[data-key]')?.dataset.key;
@@ -419,6 +466,8 @@ function loadDemo(d) {
   demo = d;
   now = loadQuery(new URLSearchParams(demo.query));
   demoKey = stateKey();
+  demoValues = Object.fromEntries(['p', ...FIELDS].map(name => [name, f[name].value]));
+  demoNotice = false;
 }
 
 function readUrl() {
@@ -429,6 +478,7 @@ function readUrl() {
     const time = loadQuery(q);
     if (!demo || q.has('t')) now = time;
   }
+  demoNotice = !!demo && stateKey() !== demoKey;  // a changed demo in the URL: at once
 }
 
 // The tab in the hash; otherwise the simulation if the URL sets a scenario,
