@@ -220,11 +220,20 @@ function draw() {
   markHover();
   panel.innerHTML = renderState(trace, analysis);
   tape.update(now);
-  if (playing) {
-    const yPx = r.playheadY * svg.clientWidth / r.width;
-    if (yPx > wrap.scrollTop + wrap.clientHeight * 0.8)
-      wrap.scrollTop = yPx - wrap.clientHeight * 0.5;
-  }
+  follow(r.playheadY * svg.clientWidth / r.width);
+}
+
+// When the time moves (playing, stepping, going to the start or the end),
+// the diagram scrolls with the playhead (y, in px) and keeps 40% of its
+// height in view ahead of it; going back, a little above it. Otherwise it
+// stays where the viewer left it, unless a playback button is pressed.
+let followedNow = null;
+function follow(y) {
+  if (now === followedNow) return;
+  followedNow = now;
+  const h = wrap.clientHeight;
+  if (y > wrap.scrollTop + 0.6 * h) wrap.scrollTop = y - 0.6 * h;
+  else if (y < wrap.scrollTop + 0.15 * h) wrap.scrollTop = Math.max(0, y - 0.15 * h);
 }
 
 function tick(ts) {
@@ -282,7 +291,9 @@ const actions = {
 
 player.addEventListener('click', e => {
   const act = e.target.closest('[data-act]')?.dataset.act;
-  if (act) actions[act]();
+  if (!act) return;
+  followedNow = null;  // a button always brings the playhead into view
+  actions[act]();
 });
 
 form.addEventListener('input', e => {
