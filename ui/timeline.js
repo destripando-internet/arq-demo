@@ -108,11 +108,13 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
     <clipPath id="past"><rect x="0" y="0" width="${WIDTH}" height="${y(now)}"/></clipPath></defs>`);
 
   // The names of the sides, upright at the outer edges, from the top of the
-  // axes down, so that they take no height.
+  // axes down, so that they take no height. main.js moves the group down as
+  // the page scrolls, so that they stay in view.
   const axisTop = TOP - 24;
   out.push(
-    `<text class="head" transform="translate(${SIDE - 7},${axisTop}) rotate(-90)" text-anchor="end">${t('sender')}</text>`,
-    `<text class="head" transform="translate(${WIDTH - SIDE + 7},${axisTop}) rotate(90)">${t('receiver')}</text>`,
+    `<g class="side-names">`
+    + `<text class="head" transform="translate(${SIDE - 7},${axisTop}) rotate(-90)" text-anchor="end">${t('sender')}</text>`
+    + `<text class="head" transform="translate(${WIDTH - SIDE + 7},${axisTop}) rotate(90)">${t('receiver')}</text></g>`,
     `<line class="axis" x1="${SX}" y1="${axisTop}" x2="${SX}" y2="${height - 10}"/>`,
     `<line class="axis" x1="${RX}" y1="${axisTop}" x2="${RX}" y2="${height - 10}"/>`,
   );

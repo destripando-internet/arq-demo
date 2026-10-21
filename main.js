@@ -222,6 +222,7 @@ function draw() {
   panel.innerHTML = renderState(trace, analysis);
   tape.update(now);
   follow(r.playheadY * svg.clientWidth / r.width);
+  placeNames();
 }
 
 // When the time moves (playing, stepping, going to the start or the end),
@@ -247,6 +248,19 @@ const side = simTab.querySelector('.sim-side');
 const pinSide = () => { side.style.top = `${Math.min(8, innerHeight - side.offsetHeight - 8)}px`; };
 new ResizeObserver(pinSide).observe(side);
 addEventListener('resize', pinSide);
+
+// The names «Sender» and «Receiver» go down with the page, at the top of the
+// visible part of the diagram (below the fixed header), never past its end.
+function placeNames() {
+  const names = svg.querySelector('.side-names');
+  if (!names) return;
+  const scale = svg.clientWidth / +svg.getAttribute('width');
+  const hidden = (simHead.getBoundingClientRect().bottom - svg.getBoundingClientRect().top) / scale;
+  const dy = Math.max(0, Math.min(hidden, +svg.getAttribute('height') - 120));
+  names.setAttribute('transform', `translate(0,${dy})`);
+}
+addEventListener('scroll', placeNames, { passive: true });
+addEventListener('resize', placeNames);
 
 function tick(ts) {
   if (!playing) return;
