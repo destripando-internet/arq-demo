@@ -6,13 +6,13 @@
   --line: #1d1d1b;
   --ack: #2f5f9e;
   --ack-idle: #8fa9c9;  /* ACK with no effect on the sender */
-  --sent: #ffbcbc;     /* send buffer: sent, not confirmed */
-  --unsent: #aade87;   /* send buffer: not sent yet */
-  --ready: #aade87;    /* receive buffer: ready for the process */
+  --sent: #ffd9d9;     /* send buffer: sent, not confirmed */
+  --unsent: #d2eebe;   /* send buffer: not sent yet */
+  --ready: #d2eebe;    /* receive buffer: ready for the process */
   --held: #d2bff5;     /* receive buffer: held behind a gap */
   --acked: #d4e3f7;    /* send buffer: confirmed since the previous row */
   --window: #f0b400;
-  --start: #cfeabd;
+  --start: #d2eebe;    /* timer started: the same green as the buffers */
   --expire: #ff8080;
   --bad: #c62828;
   --bad-bg: #fde8e8;
