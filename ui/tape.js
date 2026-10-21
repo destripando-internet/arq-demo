@@ -2,7 +2,9 @@
 // with its sequence number, and the send window as an orange frame that
 // slides over them as ACKs arrive. It follows the playback: a cell turns red
 // when its message leaves, flashes blue when an ACK confirms it and then
-// stays without colour; the frame glides to its new place.
+// stays without colour; the frame glides to its new place. When every
+// message is confirmed, the frame and the empty slots after the last
+// message fade out.
 //
 // It is drawn as the buffer rows of the diagram (ui/timeline.js), in its
 // units: cells 16 apart that share their borders, and the frame 2.5 wide
@@ -78,6 +80,7 @@ export function createTape(root) {
         + '<div class="tape-window"></div>';
       cells = [...strip.querySelectorAll('.tcell')];
       frame = strip.querySelector('.tape-window');
+      strip.classList.remove('finished', 'tape-fade');
       prevNow = null;
       prevStates = [];
       prevBase = null;
@@ -109,6 +112,13 @@ export function createTape(root) {
         const left = base * BOX * unit, right = ((base + W) * BOX + 2 * OFF) * unit;
         if (left < scroller.scrollLeft || right > scroller.scrollLeft + scroller.clientWidth)
           scroller.scrollTo({ left: Math.max(0, left - scroller.clientWidth / 4), behavior: forward ? 'smooth' : 'auto' });
+      }
+      // Everything confirmed: the frame and the empty slots go, fading only
+      // when playing forward.
+      const finished = base >= trace.params.count;
+      if (finished !== strip.classList.contains('finished')) {
+        strip.classList.toggle('tape-fade', forward);  // not «fade»: Bootstrap hides it
+        strip.classList.toggle('finished', finished);
       }
       prevNow = now;
       prevStates = states;

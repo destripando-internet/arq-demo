@@ -262,9 +262,14 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
   transition: left .45s ease-in-out, width .45s ease-in-out;
 }
 .tape-window.instant { transition: none; }
+/* Everything confirmed: the empty slots fade out once the frame has slid to
+   its place, and the frame itself 2 s after (ui/tape.js). */
+.tape-strip.finished .tape-window, .tape-strip.finished .tcell.none { opacity: 0; }
+.tape-strip.tape-fade .tcell.none { transition: opacity .5s .45s; }
+.tape-strip.tape-fade .tape-window { transition: left .45s ease-in-out, width .45s ease-in-out, opacity .5s 2s; }
 .legend-tape { --u: 1px; width: 69px; }
 @media (prefers-reduced-motion: reduce) {
-  .tape-window { transition: none; }
+  .tape-window, .tape-strip.tape-fade .tape-window, .tape-strip.tape-fade .tcell.none { transition: none; }
   .tcell.pulse, .tcell.pulse::after { animation: none; }
 }
 
