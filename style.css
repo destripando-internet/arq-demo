@@ -54,7 +54,11 @@ h1 .version { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
   display: grid; gap: 5px; align-items: start;
   grid-template-columns: clamp(300px, var(--side, 420px), calc(100% - 400px)) 10px minmax(0, 1fr);
 }
-.sim-main { position: sticky; top: 8px; }
+/* One scrollbar, the page's: the diagram takes its whole height, the playback
+   bar and the tape stay at the top above it, and the left column scrolls until
+   its end is in view and then stays (its top is set in main.js). */
+.sim-side { position: sticky; top: 8px; }
+.sim-head { position: sticky; top: 0; z-index: 3; background: var(--bg); padding-top: 4px; }
 .sim-split { align-self: stretch; position: relative; cursor: col-resize; touch-action: none; }
 .sim-split::before {
   content: ''; position: absolute; top: 0; bottom: 0; left: 4px;
@@ -67,7 +71,7 @@ h1 .version { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
 .sim.resizing { cursor: col-resize; user-select: none; }
 @media (max-width: 1000px) {
   .sim:not([hidden]) { grid-template-columns: minmax(0, 1fr); }
-  .sim-main { position: static; }
+  .sim-side { position: static; }
   .sim-split { display: none; }
 }
 /* The other tabs keep a readable line length. */
@@ -162,13 +166,10 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 #state .hint { margin-top: 4px; font-size: 0.8rem; }
 
 #timeline-wrap {
-  max-height: calc(100vh - 132px);
-  overflow-y: scroll;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
 #timeline-wrap.failed { border: 2px solid var(--bad); }
-@media (max-width: 1000px) { #timeline-wrap { max-height: 70vh; } }
 #timeline { display: block; width: 100%; height: auto; }
 
 /* SVG */

@@ -35,6 +35,7 @@ const demoBox = document.getElementById('demo');
 const demoList = document.getElementById('tab-demos');
 const simTab = document.getElementById('tab-sim');
 const splitter = simTab.querySelector('.sim-split');
+const simHead = simTab.querySelector('.sim-head');
 const tape = createTape(document.getElementById('tape'));
 // The tape takes the scale of the diagram, which follows the width of its column.
 new ResizeObserver(() => tape.scale(svg.clientWidth / +svg.getAttribute('width'))).observe(svg);
@@ -178,7 +179,7 @@ demoBox.addEventListener('click', e => {
   if (act === 'restore') {
     setPlaying(false);
     loadDemo(demo);
-    wrap.scrollTop = 0;
+    scrollTo({ top: 0, behavior: 'instant' });
   }
   rerun();
 });
@@ -205,7 +206,7 @@ demoList.addEventListener('click', e => {
   e.preventDefault();
   setPlaying(false);
   loadDemo(demoById(id));
-  wrap.scrollTop = 0;
+  scrollTo({ top: 0, behavior: 'instant' });
   rerun();
   showTab('sim');
 });
@@ -224,17 +225,28 @@ function draw() {
 }
 
 // When the time moves (playing, stepping, going to the start or the end),
-// the diagram scrolls with the playhead (y, in px) and keeps 40% of its
-// height in view ahead of it; going back, a little above it. Otherwise it
-// stays where the viewer left it, unless a playback button is pressed.
+// the page scrolls with the playhead (y, in px from the top of the diagram)
+// and keeps 40% of the diagram's visible height, below the fixed header,
+// ahead of it; going back, a little above it. Otherwise it stays where the
+// viewer left it, unless a playback button is pressed.
 let followedNow = null;
 function follow(y) {
   if (now === followedNow) return;
   followedNow = now;
-  const h = wrap.clientHeight;
-  if (y > wrap.scrollTop + 0.6 * h) wrap.scrollTop = y - 0.6 * h;
-  else if (y < wrap.scrollTop + 0.15 * h) wrap.scrollTop = Math.max(0, y - 0.15 * h);
+  const top = simHead.getBoundingClientRect().bottom;  // visible part of the diagram: top to innerHeight
+  const h = innerHeight - top;
+  const at = svg.getBoundingClientRect().top + y;      // playhead, in the viewport
+  // Instant: Bootstrap makes the page scroll smoothly, which lags behind.
+  if (at > top + 0.6 * h) scrollBy({ top: at - (top + 0.6 * h), behavior: 'instant' });
+  else if (at < top + 0.15 * h) scrollBy({ top: at - (top + 0.15 * h), behavior: 'instant' });
 }
+
+// The left column stays at the top while the page scrolls; if it is taller
+// than the window, only once its end is in view.
+const side = simTab.querySelector('.sim-side');
+const pinSide = () => { side.style.top = `${Math.min(8, innerHeight - side.offsetHeight - 8)}px`; };
+new ResizeObserver(pinSide).observe(side);
+addEventListener('resize', pinSide);
 
 function tick(ts) {
   if (!playing) return;
@@ -258,7 +270,7 @@ function setPlaying(on) {
   if (!on) return;
   if (now >= trace.end) {
     now = START;
-    wrap.scrollTop = 0;
+    scrollTo({ top: 0, behavior: 'instant' });
   }
   lastFrame = 0;
   requestAnimationFrame(tick);
@@ -269,7 +281,7 @@ const actions = {
   reset() {
     setPlaying(false);
     now = START;
-    wrap.scrollTop = 0;
+    scrollTo({ top: 0, behavior: 'instant' });
     draw();
   },
   prev() {
