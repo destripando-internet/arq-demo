@@ -115,8 +115,9 @@ do not load from `file://`, so any static server will do:
 It serves the repository on <http://localhost:8765>, telling the browser
 not to cache the files, so it always runs the edited ones, and opens it in
 the default browser. Run it again while it is serving and it only opens the
-browser; `make devel PORT=8000` changes the port. A demo is then at
-<http://localhost:8765/?demo=G1>.
+browser; `make devel PORT=8000` changes the port. If another app has the
+port, it serves on the next free one (8766…); the address is on the first
+line it prints. A demo is then at <http://localhost:8765/?demo=G1>.
 
 ## Tests
 

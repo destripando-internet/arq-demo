@@ -4,4 +4,4 @@ PORT ?= 8765
 # the default browser. Idempotent: if it is already served, it only opens it.
 .PHONY: devel
 devel:
-	python3 tools/devel.py $(PORT)
+	@python3 tools/devel.py $(PORT)
