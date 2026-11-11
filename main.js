@@ -9,6 +9,8 @@ import { renderGuide } from './ui/guide.js';
 import { LANGS, lang, setLang, t } from './ui/i18n.js';
 import { GROUPS, demoById, demosIn } from './ui/demos.js';
 import { createTape } from './ui/tape.js';
+import { icon } from './ui/icons.js';
+import { describeTrace } from './ui/events.js';
 import { VERSION } from './version.js';
 
 // Playback at 1×, in pixels of the diagram per second: an RTT takes 1.5 s
@@ -16,27 +18,37 @@ import { VERSION } from './version.js';
 // though far from to scale (about 3.7 s per RTT on a satellite link).
 const PX_PER_SECOND = 75;
 const playbackRate = ({ tTrans, tProp }) => PX_PER_SECOND / (1 + 0.25 * Math.log2(1 + tProp / tTrans));
+// With reduced motion, playing goes from step to step with this pause (§10.10).
+const STEP_PAUSE = 700;
 const FIELDS = ['k', 'w', 'n', 'tt', 'd', 'to', 'r', 'ack'];
 const LANG_KEY = 'arq-demo.lang';
-const SIDE_KEY = 'arq-demo.side';  // width of the left column of the simulation
+const SETTINGS_KEY = 'arq-demo.settings';  // preferences of the view: column width, speed (§7.5)
+const VIEWS = ['demos', 'sim', 'help'];
 
-const form = document.getElementById('controls');
+const $ = id => document.getElementById(id);
+const form = $('controls');
 const f = form.elements;
-const svg = document.getElementById('timeline');
-const panel = document.getElementById('state');
-const wrap = document.getElementById('timeline-wrap');
-const player = document.getElementById('player');
-const speed = player.querySelector('[name=speed]');
+const svg = $('timeline');
+const panel = $('state');
+const wrap = $('timeline-wrap');
+const player = $('player');
+const speed = $('speed');
+const range = $('timeline-range');
+const counter = $('counter');
+const playerStatus = $('player-status');
+const marks = $('marks');
 const playBtn = player.querySelector('[data-act=play]');
-const langBar = document.getElementById('lang');
-const tabs = document.getElementById('tabs');
-const guide = document.getElementById('tab-guide');
-const demoBox = document.getElementById('demo');
-const demoList = document.getElementById('tab-demos');
-const simTab = document.getElementById('tab-sim');
-const splitter = simTab.querySelector('.sim-split');
-const simHead = simTab.querySelector('.sim-head');
-const tape = createTape(document.getElementById('tape'));
+const langSelect = $('lang');
+const guide = $('guide');
+const demoBox = $('demo');
+const demoList = $('demo-list');
+const simView = $('view-sim');
+const side = $('sim-side');
+const splitter = $('sim-split');
+const simHead = simView.querySelector('.sim-head');
+const statusBar = document.querySelector('.status-bar');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const tape = createTape($('tape'));
 // The tape takes the scale of the diagram, which follows the width of its column.
 new ResizeObserver(() => tape.scale(svg.clientWidth / +svg.getAttribute('width'))).observe(svg);
 
@@ -50,6 +62,17 @@ const START = -1e-6;
 let now = START;
 let playing = false;
 let lastFrame = 0;
+let view = 'demos';
+
+// Preferences of the view, in one key; without storage, the initial values.
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) ?? {}; } catch { return {}; }
+}
+function saveSetting(name, value) {
+  const s = loadSettings();
+  if (value === undefined) delete s[name]; else s[name] = value;
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch {}
+}
 
 // Numeric value of a field, clamped to its min/max.
 function value(input) {
@@ -73,18 +96,22 @@ function fillSelect(select, options, selected = select.value) {
   if (select.selectedIndex < 0) select.selectedIndex = 0;
 }
 
-function fillAckModes(proto, selected) {
-  fillSelect(f.ack, proto.ackModes.map(m => [m, t(`ack.${m}`)]), selected);
-  f.ack.disabled = proto.ackModes.length === 1;
-  fixedTitle(f.ack, f.ack.disabled);
+// Fields whose value the protocol fixes: k and Ws are read-only, and the ACK
+// select has its only option. They do not go in the URL.
+const fixedAck = () => byId(f.p.value).ackModes.length === 1;
+const isFixed = name => (name === 'ack' ? fixedAck() : !!f[name]?.readOnly);
+
+// Help of a field, in its tooltip (it shows with the focus too), saying why
+// when the protocol fixes its value; it keeps the right text after a change
+// of language.
+function setHint(name, fixed) {
+  f[name].dataset.textTooltip = `${name}.hint${fixed ? '.fixed' : ''}`;
+  f[name].dataset.tooltip = t(f[name].dataset.textTooltip);
 }
 
-// Tooltip of a field, saying so when the protocol fixes its value; it keeps
-// the right text after a change of language.
-function fixedTitle(input, fixed) {
-  const label = input.closest('label');
-  label.dataset.i18nTitle = `${input.name}.title${fixed ? '.fixed' : ''}`;
-  label.title = t(label.dataset.i18nTitle);
+function fillAckModes(proto, selected) {
+  fillSelect(f.ack, proto.ackModes.map(m => [m, t(`ack.${m}`)]), selected);
+  setHint('ack', proto.ackModes.length === 1);
 }
 
 // The link select shows the preset matching Ttrans and Tprop, or «custom».
@@ -101,8 +128,9 @@ function loadParams(proto, params = {}) {
   f.tt.value = p.tTrans;
   f.d.value = p.tProp;
   f.to.value = p.timeout;
-  f.k.disabled = f.w.disabled = !!proto.fixed;
-  for (const input of [f.k, f.w]) fixedTitle(input, proto.fixed);
+  f.k.readOnly = f.w.readOnly = !!proto.fixed;
+  setHint('k', !!proto.fixed);
+  setHint('w', !!proto.fixed);
   fillAckModes(proto, p.ack);
   showLink();
 }
@@ -111,7 +139,7 @@ function loadParams(proto, params = {}) {
 function markInputs(an) {
   for (const input of [f.k, f.w, f.to, f.ack]) input.classList.remove('invalid', 'warn');
   if (!an.windowOk) f.k.classList.add('invalid'), f.w.classList.add('invalid');
-  else if (!an.efficient && !f.w.disabled) f.w.classList.add('warn');
+  else if (!an.efficient && !f.w.readOnly) f.w.classList.add('warn');
   if (!an.ackOk) f.ack.classList.add('invalid');
   if (!an.timeoutOk) f.to.classList.add('warn');
   wrap.classList.toggle('failed', !!(an.failure || an.loop || an.unfinished));
@@ -132,14 +160,15 @@ function rerun() {
   scale = timeScale(trace);
   times = eventTimes(trace);
   tape.load(trace);
-  document.getElementById('calc-a').value = num(analysis.a);
-  document.getElementById('calc-2a').value = +(1 + 2 * analysis.a).toPrecision(4);
+  $('calc-a').value = num(analysis.a);
+  $('calc-2a').value = +(1 + 2 * analysis.a).toPrecision(4);
   markInputs(analysis);
   markChanged();
   now = Math.min(now, trace.end);
   writeUrl();
   renderDemo();
   scheduleNotice();
+  drawMarks();
   draw();
 }
 
@@ -161,21 +190,28 @@ function scheduleNotice() {
 function renderDemo() {
   demoBox.hidden = !demo;
   if (!demo) return;
-  demoBox.innerHTML = `
-    <div class="demo-head">
-      <h2>${demo.id} · ${demo.title[lang()]}</h2>
-      <button type="button" class="btn-close" data-demo="close" title="${t('demo.close')}" aria-label="${t('demo.close')}"></button>
-    </div>
-    <p>${demo.text[lang()]}</p>
-    ${demoNotice ? `<p class="demo-changed">${t('demo.modified')}
-      <button type="button" class="btn btn-sm btn-outline-primary" data-demo="restore">
-        <i class="bi bi-arrow-counterclockwise"></i> ${t('demo.restore')}</button></p>` : ''}`;
+  const focused = demoBox.contains(document.activeElement) ? document.activeElement.dataset.demo : null;
+  demoBox.innerHTML = `${icon('info')}
+    <div class="alert-body">
+      <div class="demo-head">
+        <h2>${demo.id} · ${demo.title[lang()]}</h2>
+        <button type="button" class="btn btn-icon btn-text" data-demo="close"
+          aria-label="${t('demo.close')}" data-tooltip="${t('demo.close')}">${icon('close')}</button>
+      </div>
+      <p>${demo.text[lang()]}</p>
+      ${demoNotice ? `<p class="demo-changed">${t('demo.modified')}
+        <button type="button" class="btn btn-sm" data-demo="restore">${icon('undo')} ${t('demo.restore')}</button></p>` : ''}
+    </div>`;
+  if (focused) demoBox.querySelector(`[data-demo=${focused}]`)?.focus();
 }
 
 demoBox.addEventListener('click', e => {
   const act = e.target.closest('[data-demo]')?.dataset.demo;
   if (!act) return;
-  if (act === 'close') demo = null;
+  if (act === 'close') {
+    demo = null;
+    form.querySelector('select, input')?.focus();  // the box goes away: the focus does not get lost
+  }
   if (act === 'restore') {
     setPlaying(false);
     loadDemo(demo);
@@ -184,18 +220,18 @@ demoBox.addEventListener('click', e => {
   rerun();
 });
 
-// «Demos» tab: every demo by section, the loaded one highlighted.
+// «Demos» view: every demo by section, the loaded one marked as current.
 function renderDemoList() {
   demoList.innerHTML = `<p>${t('demos.intro')}</p>` + GROUPS.map(g => `
-    <section>
-      <h2>${g.title[lang()]}</h2>
+    <section aria-labelledby="group-${g.id}">
+      <h2 id="group-${g.id}">${g.title[lang()]}</h2>
       ${g.text ? `<p>${g.text[lang()]}</p>` : ''}
-      <div class="list-group">${demosIn(g).map(d => `
-        <a href="?demo=${d.id}" class="list-group-item list-group-item-action demo-item${d === demo ? ' current' : ''}"
-           data-demo-id="${d.id}"${d === demo ? ' aria-current="true"' : ''}>
-          <h3><span class="demo-id">${d.id}</span> ${d.title[lang()]}</h3>
+      <ul class="demo-list">${demosIn(g).map(d => `
+        <li class="demo-item${d === demo ? ' current' : ''}">
+          <h3><a href="?demo=${d.id}#sim" data-demo-id="${d.id}"${d === demo ? ' aria-current="true"' : ''}>
+            <span class="demo-id">${d.id}</span>${d.title[lang()]}</a></h3>
           <p>${d.text[lang()]}</p>
-        </a>`).join('')}</div>
+        </li>`).join('')}</ul>
     </section>`).join('');
 }
 
@@ -206,46 +242,55 @@ demoList.addEventListener('click', e => {
   e.preventDefault();
   setPlaying(false);
   loadDemo(demoById(id));
-  scrollTo({ top: 0, behavior: 'instant' });
   rerun();
-  showTab('sim');
+  goTo('sim');
+  scrollTo({ top: 0, behavior: 'instant' });
 });
 
 function draw() {
   const r = renderTimeline(trace, now, protocol);
+  const hadFocus = svg.contains(document.activeElement);
   svg.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
   svg.setAttribute('width', r.width);
   svg.setAttribute('height', r.height);
   svg.innerHTML = r.svg;
+  svg.ariaLabel = t('diagram.name', {
+    n: trace.transmissions.filter(tx => tx.kind === 'data' && !tx.rtx).length, rtx: analysis.retransmissions,
+  });
+  rovingFocus(hadFocus);
+  if (events.open) eventsTable.innerHTML = describeTrace(trace, now);
   tape.scale(svg.clientWidth / r.width);
   markHover();
   panel.innerHTML = renderState(trace, analysis);
   tape.update(now);
+  showPosition();
   follow(r.playheadY * svg.clientWidth / r.width);
   placeNames();
 }
 
 // When the time moves (playing, stepping, going to the start or the end),
 // the page scrolls with the playhead (y, in px from the top of the diagram)
-// and keeps 40% of the diagram's visible height, below the fixed header,
-// ahead of it; going back, a little above it. Otherwise it stays where the
-// viewer left it, unless a playback button is pressed.
+// and keeps 40% of the diagram's visible height, between the fixed header and
+// the status bar, ahead of it; going back, a little above it. Otherwise it
+// stays where the viewer left it, unless a playback button is pressed.
 let followedNow = null;
 function follow(y) {
-  if (now === followedNow) return;
+  if (now === followedNow || view !== 'sim') return;
   followedNow = now;
-  const top = simHead.getBoundingClientRect().bottom;  // visible part of the diagram: top to innerHeight
-  const h = innerHeight - top;
+  const top = simHead.getBoundingClientRect().bottom;  // visible part of the diagram: top to bottom
+  const bottom = statusBar.getBoundingClientRect().top;
+  const h = bottom - top;
   const at = svg.getBoundingClientRect().top + y;      // playhead, in the viewport
-  // Instant: Bootstrap makes the page scroll smoothly, which lags behind.
   if (at > top + 0.6 * h) scrollBy({ top: at - (top + 0.6 * h), behavior: 'instant' });
   else if (at < top + 0.15 * h) scrollBy({ top: at - (top + 0.15 * h), behavior: 'instant' });
 }
 
 // The left column stays at the top while the page scrolls; if it is taller
-// than the window, only once its end is in view.
-const side = simTab.querySelector('.sim-side');
-const pinSide = () => { side.style.top = `${Math.min(8, innerHeight - side.offsetHeight - 8)}px`; };
+// than the window, only once its end is in view (above the status bar).
+const pinSide = () => {
+  const room = statusBar.getBoundingClientRect().top;
+  side.style.top = `${Math.min(8, room - side.offsetHeight - 8)}px`;
+};
 new ResizeObserver(pinSide).observe(side);
 addEventListener('resize', pinSide);
 
@@ -253,7 +298,7 @@ addEventListener('resize', pinSide);
 // visible part of the diagram (below the fixed header), never past its end.
 function placeNames() {
   const names = svg.querySelector('.side-names');
-  if (!names) return;
+  if (!names || !svg.clientWidth) return;  // hidden view: nothing to place
   const scale = svg.clientWidth / +svg.getAttribute('width');
   const hidden = (simHead.getBoundingClientRect().bottom - svg.getBoundingClientRect().top) / scale;
   const dy = Math.max(0, Math.min(hidden, +svg.getAttribute('height') - 120));
@@ -261,6 +306,11 @@ function placeNames() {
 }
 addEventListener('scroll', placeNames, { passive: true });
 addEventListener('resize', placeNames);
+
+// ---------- Playback (§10.10) ----------
+// A step is each instant at which something changes: «Step k of N» counts the
+// event times reached; 0 is the start, before anything happens.
+const stepIndex = () => times.filter(x => x <= now + 1e-9).length;
 
 function tick(ts) {
   if (!playing) return;
@@ -273,21 +323,39 @@ function tick(ts) {
   else requestAnimationFrame(tick);
 }
 
+// Reduced motion: from step to step, without the positions in between.
+let stepTimer = 0;
+function stepPlay() {
+  if (!playing) return;
+  now = times.find(x => x > now + 1e-9) ?? trace.end;
+  draw();
+  if (now >= trace.end) setPlaying(false);
+  else stepTimer = setTimeout(stepPlay, STEP_PAUSE / +speed.value);
+}
+
 function showPlayButton() {
-  playBtn.innerHTML = `<i class="bi bi-${playing ? 'pause' : 'play'}-fill"></i>`;
-  playBtn.title = t(playing ? 'pause' : 'play');
+  const label = t(playing ? 'pause' : 'play');
+  playBtn.innerHTML = icon(playing ? 'pause' : 'play-arrow');
+  playBtn.ariaLabel = label;
+  playBtn.dataset.tooltip = `${label} (${t('key.space')})`;
 }
 
 function setPlaying(on) {
+  const was = playing;
   playing = on;
+  clearTimeout(stepTimer);
   showPlayButton();
+  // Stopped: the step where it stopped is announced (not while playing).
+  if (was && !on) announcePosition();
   if (!on) return;
   if (now >= trace.end) {
     now = START;
     scrollTo({ top: 0, behavior: 'instant' });
   }
+  playerStatus.textContent = '';
   lastFrame = 0;
-  requestAnimationFrame(tick);
+  if (reducedMotion.matches) stepTimer = setTimeout(stepPlay, 0);
+  else requestAnimationFrame(tick);
 }
 
 const actions = {
@@ -315,13 +383,82 @@ const actions = {
   },
 };
 
-player.addEventListener('click', e => {
-  const act = e.target.closest('[data-act]')?.dataset.act;
-  if (!act) return;
+// The buttons that would do nothing at the start or at the end stay in place,
+// marked as not available, with the reason in their tooltip (D6-C).
+const AT_START = ['reset', 'prev'];
+const AT_END = ['step', 'end'];
+function showPosition() {
+  const k = stepIndex(), n = times.length;
+  const atStart = now <= START, atEnd = now >= trace.end;
+  for (const b of player.querySelectorAll('[data-act]:not([data-act=play])')) {
+    const act = b.dataset.act;
+    const off = (atStart && AT_START.includes(act)) || (atEnd && AT_END.includes(act));
+    const text = `${t(act)} (${t(`key.${act}`)})`;
+    b.ariaLabel = t(act);
+    b.dataset.tooltip = off ? `${text}. ${t(atStart ? 'at.start' : 'at.end')}` : text;
+    if (off) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
+  }
+  counter.textContent = t('step.counter', { k, n });
+  range.max = scale.y(trace.end);
+  range.value = Math.max(0, scale.y(now));
+  range.setAttribute('aria-valuetext', t('step.counter', { k, n }));
+}
+
+// Announced when the user moves the time, not while it plays.
+function announcePosition() {
+  playerStatus.textContent = '';
+  playerStatus.textContent = t('step.counter', { k: stepIndex(), n: times.length });
+}
+
+// A mark under the slider at each step.
+function drawMarks() {
+  const end = scale.y(trace.end) || 1;
+  marks.innerHTML = times.map(x => `<span style="left:${(100 * scale.y(x) / end).toFixed(2)}%"></span>`).join('');
+}
+
+function act(name) {
+  if (!actions[name]) return;
+  const b = player.querySelector(`[data-act=${name}]`);
+  if (b?.getAttribute('aria-disabled') === 'true') return;
   followedNow = null;  // a button always brings the playhead into view
-  actions[act]();
+  actions[name]();
+  if (name !== 'play') announcePosition();
+}
+
+player.addEventListener('click', e => {
+  const name = e.target.closest('[data-act]')?.dataset.act;
+  if (name) act(name);
 });
 
+// The slider shows any instant, also between two steps; its keys go from step
+// to step.
+range.addEventListener('input', () => {
+  setPlaying(false);
+  followedNow = null;
+  now = Math.min(trace.end, Math.max(START, scale.time(+range.value)));
+  if (+range.value <= 0) now = START;
+  draw();
+});
+range.addEventListener('change', announcePosition);
+
+// Keys of the player, with the focus in it or in the diagram (§10.10, §11.1).
+// On a button, Space presses it, as always.
+const KEYS = { ' ': 'play', ArrowLeft: 'prev', ArrowRight: 'step', Home: 'reset', End: 'end' };
+function playerKeys(e) {
+  const name = KEYS[e.key];
+  if (!name || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === ' ' && e.target.closest('button, select')) return;
+  if (e.target.matches('select')) return;
+  e.preventDefault();
+  act(name);
+}
+player.addEventListener('keydown', playerKeys);
+wrap.addEventListener('keydown', playerKeys);
+
+speed.addEventListener('change', () => saveSetting('speed', speed.value));
+reducedMotion.addEventListener('change', () => playing && setPlaying(true));
+
+// ---------- Fields ----------
 form.addEventListener('input', e => {
   if (e.target === f.p) {
     loadParams(byId(f.p.value));
@@ -353,7 +490,7 @@ function stepped(input, up) {
 let wheelDelta = 0;  // trackpads send many small deltas: step every 40px
 form.addEventListener('wheel', e => {
   const input = e.target.closest('input[type=number]');
-  if (!input || input.disabled) return;
+  if (!input || input.readOnly) return;
   e.preventDefault();
   wheelDelta += e.deltaMode ? e.deltaY * 40 : e.deltaY;
   if (Math.abs(wheelDelta) < 40) return;
@@ -362,6 +499,7 @@ form.addEventListener('wheel', e => {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }, { passive: false });
 
+// ---------- Diagram ----------
 // Pointer on an arrow: the lines where it leaves and where it arrives get a
 // grey background, also across the redraws while playing.
 let hoverKey = null;
@@ -378,32 +516,85 @@ svg.addEventListener('pointerleave', () => {
   markHover();
 });
 
-svg.addEventListener('click', e => {
-  const key = e.target.closest('[data-key]')?.dataset.key;
-  if (!key) return;
+// Losing or delivering an arrow: a click, or Enter or Space on it.
+function toggleLoss(key) {
   const tx = trace.transmissions.find(x => x.key === key);
   if (losses.has(key)) losses.delete(key);
   else losses.set(key, !tx.lost);
   rerun();
+}
+svg.addEventListener('click', e => {
+  const key = e.target.closest('[data-key]')?.dataset.key;
+  if (key) toggleLoss(key);
 });
 
+// The arrows are a single tab stop: the one that had the focus, or the
+// first; ↑ and ↓ go through them in the order they leave. The focus stays on
+// the same arrow while the diagram is redrawn.
+let focusKey = null;
+function rovingFocus(refocus) {
+  const msgs = [...svg.querySelectorAll('.msg')];
+  const current = msgs.find(m => m.dataset.key === focusKey) ?? msgs[0];
+  if (current) current.tabIndex = 0;
+  if (refocus) current?.focus({ preventScroll: true });
+}
+svg.addEventListener('keydown', e => {
+  const msg = e.target.closest('.msg');
+  if (!msg) return;
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    e.stopPropagation();  // on an arrow, Space presses it, as on any button
+    toggleLoss(msg.dataset.key);
+    return;
+  }
+  const msgs = [...svg.querySelectorAll('.msg')];
+  const i = msgs.indexOf(msg) + ({ ArrowDown: 1, ArrowUp: -1 }[e.key] ?? NaN);
+  if (Number.isNaN(i)) return;  // the player's keys go on to the diagram's frame
+  e.preventDefault();
+  const next = msgs[Math.max(0, Math.min(msgs.length - 1, i))];
+  msg.tabIndex = -1;
+  next.tabIndex = 0;
+  next.focus();
+});
+// The arrow with the focus is highlighted as the one under the pointer (§10.8).
+svg.addEventListener('focusin', e => {
+  const key = e.target.closest('.msg')?.dataset.key;
+  if (!key) return;
+  focusKey = hoverKey = key;
+  markHover();
+});
+svg.addEventListener('focusout', e => {
+  if (svg.contains(e.relatedTarget)) return;
+  hoverKey = null;
+  markHover();
+});
+
+const events = $('events');
+const eventsTable = $('events-table');
+events.addEventListener('toggle', () => { if (events.open) eventsTable.innerHTML = describeTrace(trace, now); });
+
+// ---------- Language and texts ----------
 // Language: ?lang=, then the last choice, then the browser's language.
 function initialLang() {
   const q = new URLSearchParams(location.search).get('lang');
   let stored = null;
   try { stored = localStorage.getItem(LANG_KEY); } catch {}
-  const browser = navigator.language?.toLowerCase().startsWith('es') ? 'es' : 'en';
-  return [q, stored, browser].find(l => LANGS.includes(l));
+  const browser = (navigator.languages ?? [navigator.language]).map(l => l?.slice(0, 2).toLowerCase());
+  return [q, stored, ...browser, 'en'].find(l => LANGS.includes(l));
 }
 
 function applyLang(code) {
   setLang(code);
   document.documentElement.lang = lang();
-  document.title = t('title');
-  for (const el of document.querySelectorAll('[data-i18n]')) el.innerHTML = t(el.dataset.i18n);
-  for (const el of document.querySelectorAll('[data-i18n-title]')) el.title = t(el.dataset.i18nTitle);
-  for (const el of document.querySelectorAll('[data-i18n-aria]')) el.ariaLabel = t(el.dataset.i18nAria);
-  for (const b of langBar.querySelectorAll('[data-lang]')) b.classList.toggle('active', b.dataset.lang === lang());
+  langSelect.value = lang();
+  document.title = view === 'sim' || view === 'demos' ? t('title') : `${t('help')} · ${t('title')}`;
+  for (const el of document.querySelectorAll('[data-text]')) el.innerHTML = t(el.dataset.text);
+  for (const el of document.querySelectorAll('[data-text-aria]')) el.ariaLabel = t(el.dataset.textAria);
+  for (const el of document.querySelectorAll('[data-text-tooltip]')) el.dataset.tooltip = t(el.dataset.textTooltip);
+  splitter.ariaLabel = t('split.name');
+  splitter.dataset.tooltip = t('split.title');
+  side.ariaLabel = t('split.name');
+  $('version').textContent = t('version', { v: VERSION });
   fillSelect(f.p, PROTOCOLS.map(p => [p.id, t(`proto.${p.id}`)]));
   if (protocol) fillAckModes(protocol, f.ack.value);
   fillSelect(f.link, [...LINKS.map(l => [l.id, t(`link.${l.id}`)]), ['custom', t('link.custom')]]);
@@ -414,81 +605,103 @@ function applyLang(code) {
   if (protocol) renderDemo();
 }
 
-// Tabs: «demos» (the list), «sim» (controls and diagram) and «guide»; the URL
-// hash keeps it.
-function showTab(name) {
-  for (const b of tabs.querySelectorAll('[data-tab]')) {
-    const on = b.dataset.tab === name;
-    b.classList.toggle('active', on);
-    b.ariaSelected = on;
-    document.getElementById(`tab-${b.dataset.tab}`).hidden = !on;
-  }
-  if (name === 'demos') renderDemoList();
-  if (name !== 'sim') setPlaying(false);
-  const base = location.pathname + location.search;
-  history.replaceState(null, '', name === 'sim' ? base : `${base}#${name}`);
-}
-
-tabs.addEventListener('click', e => {
-  const name = e.target.closest('[data-tab]')?.dataset.tab;
-  if (name) showTab(name);
-});
-
-langBar.addEventListener('click', e => {
-  const code = e.target.closest('[data-lang]')?.dataset.lang;
-  if (!code) return;
-  try { localStorage.setItem(LANG_KEY, code); } catch {}
-  applyLang(code);
+langSelect.addEventListener('change', () => {
+  try { localStorage.setItem(LANG_KEY, langSelect.value); } catch {}
+  applyLang(langSelect.value);
+  setHint('k', f.k.readOnly);
+  setHint('w', f.w.readOnly);
   draw();
 });
 
-// Splitter between the columns of the simulation: drag it, or use the arrow
-// keys, to share the width; double-click restores it. The CSS keeps it within
-// limits; the width each viewer chooses is remembered.
-const sideWidth = () => simTab.querySelector('.sim-side').getBoundingClientRect().width;
-const setSide = px => simTab.style.setProperty('--side', `${Math.round(px)}px`);
+// ---------- Views ----------
+// «demos» (the list), «sim» (controls and diagram) and «help»: each has its
+// own address (#demos, #sim, #help), so that Back returns to the previous one.
+function showView(name) {
+  view = name;
+  for (const v of VIEWS) $(`view-${v}`).hidden = v !== name;
+  for (const a of document.querySelectorAll('[data-view]')) {
+    if (a.dataset.view === name) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  }
+  document.title = name === 'help' ? `${t('help')} · ${t('title')}` : t('title');
+  if (name === 'demos') renderDemoList();
+  if (name !== 'sim') setPlaying(false);
+  if (name === 'sim') { followedNow = null; pinSide(); placeNames(); }
+}
+
+// Going to a view: a new entry in the history, and the focus at its start.
+function goTo(name) {
+  if (location.hash !== `#${name}`) history.pushState(null, '', `${location.pathname}${location.search}#${name}`);
+  showView(name);
+}
+
+function viewFromHash() {
+  const name = location.hash.slice(1);
+  if (name === 'guide') return 'help';  // older links
+  if (VIEWS.includes(name)) return name;
+  const q = new URLSearchParams(location.search);
+  return q.has('demo') || q.has('p') ? 'sim' : 'demos';
+}
+
+addEventListener('hashchange', () => {
+  showView(viewFromHash());
+  $('main').focus({ preventScroll: true });
+  scrollTo({ top: 0, behavior: 'instant' });
+});
+addEventListener('popstate', () => showView(viewFromHash()));
+
+// ---------- Splitter ----------
+// Between the columns of the simulation: drag it, or use the arrow keys
+// (Home and End for the limits), to share the width; double-click restores
+// it. The CSS keeps it within limits; the width each viewer chooses is
+// remembered.
+const sideWidth = () => side.getBoundingClientRect().width;
+const setSide = px => simView.style.setProperty('--side', `${Math.round(px)}px`);
+
+function showSplit() {
+  const total = simView.getBoundingClientRect().width || 1;
+  splitter.setAttribute('aria-valuenow', Math.round(100 * sideWidth() / total));
+}
 
 function saveSide() {
   setSide(sideWidth());  // what the limits let through
-  try { localStorage.setItem(SIDE_KEY, Math.round(sideWidth())); } catch {}
+  saveSetting('side', Math.round(sideWidth()));
+  showSplit();
 }
 
 splitter.addEventListener('pointerdown', e => {
   const start = sideWidth() - e.clientX;
   const move = ev => setSide(start + ev.clientX);
   splitter.setPointerCapture(e.pointerId);
-  simTab.classList.add('resizing');
+  simView.classList.add('resizing');
   splitter.addEventListener('pointermove', move);
   splitter.addEventListener('lostpointercapture', () => {
     splitter.removeEventListener('pointermove', move);
-    simTab.classList.remove('resizing');
+    simView.classList.remove('resizing');
     saveSide();
   }, { once: true });
 });
 
 splitter.addEventListener('keydown', e => {
-  const step = { ArrowLeft: -20, ArrowRight: 20 }[e.key];
-  if (!step) return;
+  const target = { ArrowLeft: sideWidth() - 20, ArrowRight: sideWidth() + 20, Home: 0, End: 1e5 }[e.key];
+  if (target === undefined) return;
   e.preventDefault();
-  setSide(sideWidth() + step);
+  setSide(target);
   saveSide();
 });
 
 splitter.addEventListener('dblclick', () => {
-  simTab.style.removeProperty('--side');
-  try { localStorage.removeItem(SIDE_KEY); } catch {}
+  simView.style.removeProperty('--side');
+  saveSetting('side', undefined);
+  showSplit();
 });
+new ResizeObserver(showSplit).observe(side);
 
-try {
-  const side = +localStorage.getItem(SIDE_KEY);
-  if (side > 0) setSide(side);
-} catch {}
-
-// The scenario as URL parameters:
+// ---------- Scenario in the URL ----------
 // p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&r=0&l=d1.1,-a2
 function scenario() {
   const q = new URLSearchParams({ p: f.p.value });
-  for (const name of FIELDS) if (!f[name].disabled) q.set(name, f[name].value);
+  for (const name of FIELDS) if (!isFixed(name)) q.set(name, f[name].value);
   const l = [...losses].map(([k, lost]) => (lost ? '' : '-') + k).join(',');
   if (l) q.set('l', l);
   return q;
@@ -496,7 +709,8 @@ function scenario() {
 const stateKey = () => scenario().toString();
 
 // State in the URL, to link a specific scenario. With a demo open, ?demo=ID
-// goes first; on load, explicit parameters win over the demo's.
+// goes first; on load, explicit parameters win over the demo's. Each change
+// replaces the address, without new entries in the history (§8.15).
 function writeUrl() {
   const q = new URLSearchParams(demo ? { demo: demo.id } : {});
   for (const [key, val] of scenario()) q.set(key, val);
@@ -508,7 +722,7 @@ function writeUrl() {
 // Loads a scenario from URL parameters; returns the instant to show.
 function loadQuery(q) {
   loadParams(byId(q.get('p')));
-  for (const name of FIELDS) if (q.has(name) && !f[name].disabled) f[name].value = q.get(name);
+  for (const name of FIELDS) if (q.has(name) && !isFixed(name)) f[name].value = q.get(name);
   if (!q.has('r')) f.r.value = 0;
   if (f.ack.selectedIndex < 0) f.ack.selectedIndex = 0;
   showLink();
@@ -538,18 +752,14 @@ function readUrl() {
   demoNotice = !!demo && stateKey() !== demoKey;  // a changed demo in the URL: at once
 }
 
-// The tab in the hash; otherwise the simulation if the URL sets a scenario,
-// or else the list of demos.
-function initialTab() {
-  const name = location.hash.slice(1);
-  if (name === 'demos' || name === 'guide') return name;
-  const q = new URLSearchParams(location.search);
-  return q.has('demo') || q.has('p') ? 'sim' : 'demos';
+// ---------- Start ----------
+{
+  const s = loadSettings();
+  if (s.side > 0) setSide(s.side);
+  if ([...speed.options].some(o => o.value === s.speed)) speed.value = s.speed;
 }
-
-document.getElementById('version').textContent = `v${VERSION}`;
+const firstView = viewFromHash();  // before rerun() writes the scenario in the URL
 applyLang(initialLang());
-const firstTab = initialTab();  // before rerun() writes the scenario in the URL
 readUrl();
 rerun();
-showTab(firstTab);
+showView(firstView);

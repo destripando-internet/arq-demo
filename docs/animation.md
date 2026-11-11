@@ -227,7 +227,8 @@ Inkscape:
   (now `.fail-banner`), its `.row` is a grid with negative margins (not
   used), its reboot makes `dt` bold and `h2` medium weight, and its
   `legend` floats (the groups use a non-floating legend on the fieldset
-  border). The page is light only: there is no dark mode.
+  border). Bootstrap was replaced later by the style guide (README, «Style
+  guide»), which also brings the dark theme.
 - **Hidden SVG markers**: the guide's icons have their own arrowhead markers;
   markers inside a `display: none` subtree may not render.
 

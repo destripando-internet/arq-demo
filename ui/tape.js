@@ -117,7 +117,7 @@ export function createTape(root) {
       // when playing forward.
       const finished = base >= trace.params.count;
       if (finished !== strip.classList.contains('finished')) {
-        strip.classList.toggle('tape-fade', forward);  // not «fade»: Bootstrap hides it
+        strip.classList.toggle('tape-fade', forward);
         strip.classList.toggle('finished', finished);
       }
       prevNow = now;

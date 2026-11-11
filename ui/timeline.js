@@ -7,6 +7,7 @@
 
 import { t } from './i18n.js';
 import { timeScale, ROW } from './timescale.js';
+import { messageName } from './events.js';
 
 const TOP = 34;
 const SIDE = 24;    // column at each side for the names, written upright
@@ -249,11 +250,15 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
     // no effect on the sender, or a spurious retransmission.
     const idle = tx.noEffect || tx.spurious;
     const head = !idle ? tx.kind : tx.kind === 'ack' ? 'idle' : 'idle-data';
-    out.push(`<g class="msg ${tx.kind}${tx.lost ? ' lost' : ''}${idle ? ' idle' : ''}" data-key="${tx.key}">`,
+    // Each arrow is a button that loses it or delivers it, reached with the
+    // keyboard too (main.js moves the focus between them).
+    const action = t(tx.lost ? 'click.deliver' : 'click.lose', { name: messageName(tx) });
+    out.push(`<g class="msg ${tx.kind}${tx.lost ? ' lost' : ''}${idle ? ' idle' : ''}" data-key="${tx.key}" `
+      + `role="button" tabindex="-1" aria-label="${action}">`,
       `<line class="hit" x1="${x1}" y1="${y1}" x2="${xh}" y2="${yh}"/>`,
       `<line class="line" x1="${x1}" y1="${y1}" x2="${xe}" y2="${ye}"${arrived ? '' : ` marker-end="url(#ah-${head})"`}/>`,
       arrived ? `<rect class="drop" x="${xh - 5}" y="${yh - 5}" width="10" height="10"/>` : '',
-      `<title>${t(tx.lost ? 'click.deliver' : 'click.lose', { key: tx.key })}</title></g>`);
+      `<title>${action}</title></g>`);
   }
 
   // Current time

@@ -1,183 +1,186 @@
-:root {
-  --bg: #ffffff;
-  --panel: #f4f4f2;
-  --fg: #1d1d1b;
-  --muted: #6b6b66;
-  --line: #1d1d1b;
-  --ack: #2b7bd9;
-  --ack-idle: #93b8e6;  /* ACK with no effect on the sender */
-  --data-idle: #9a9a95; /* spurious retransmission */
-  --sent: #ffd9d9;     /* send buffer: sent, not confirmed */
-  --unsent: #d2eebe;   /* send buffer: not sent yet */
-  --ready: #d2eebe;    /* receive buffer: ready for the process */
-  --held: #d2bff5;     /* receive buffer: held behind a gap */
-  --acked: #d4e3f7;    /* send buffer: confirmed since the previous row */
-  --window: #f0b400;
-  --start: #d2eebe;    /* timer started: the same green as the buffers */
-  --expire: #ff8080;
-  --bad: #c62828;
-  --bad-bg: #fde8e8;
-  --warn: #9a6200;
-  --warn-bg: #fff4d6;
-  --ok: #2e7d32;
-  --band: rgba(29, 29, 27, 0.06);      /* transmission bands, alternating */
-  --band-alt: rgba(29, 29, 27, 0.10);
-  --playhead: #e05a00;
-  --border: #d6d6d0;
-  --changed-bg: #e4edf9;  /* field changed from the loaded demo */
-  --hover-bg: #f7f7f6;    /* lines of the arrow under the pointer */
-  color-scheme: light;
-}
+/* Styles of this application, on top of the style guide's tokens.css
+   (style-guide/, see README «Style guide»). Colours with a role in the guide
+   come from its tokens; the diagram keeps its own colours, with a variant for
+   the dark theme. */
 
-* { box-sizing: border-box; }
+:root {
+  --container: 90rem;  /* the simulation needs the width; text views set their own */
+  /* Diagram (light theme) */
+  --line: var(--color-on-surface);        /* data arrows, axes, cell borders */
+  --ack: #2b7bd9;
+  --ack-idle: #93b8e6;   /* ACK with no effect on the sender */
+  --data-idle: #9a9a95;  /* spurious retransmission */
+  --sent: #ffd9d9;       /* send buffer: sent, not confirmed */
+  --unsent: #d2eebe;     /* send buffer: not sent yet */
+  --ready: #d2eebe;      /* receive buffer: ready for the process */
+  --held: #d2bff5;       /* receive buffer: held behind a gap */
+  --acked: #d4e3f7;      /* send buffer: confirmed since the previous row */
+  --window: #f0b400;
+  --start: #d2eebe;      /* timer started: the same green as the buffers */
+  --expire: #ff8080;
+  --band: rgb(29 29 27 / 0.06);      /* transmission bands, alternating */
+  --band-alt: rgb(29 29 27 / 0.10);
+  --playhead: #e05a00;
+  --hover-bg: #f2f4f5;   /* lines of the arrow under the pointer */
+}
+/* Diagram (dark theme): the same hues, so that each thing keeps its colour;
+   fills dark enough for the light text of the cells. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ack: #78a9ff;
+    --ack-idle: #4f6f9e;
+    --data-idle: #7d8a90;
+    --sent: #6b2a2a;
+    --unsent: #2d5228;
+    --ready: #2d5228;
+    --held: #4b3a78;
+    --acked: #26446e;
+    --window: #f0b400;
+    --start: #2d5228;
+    --expire: #b84444;
+    --band: rgb(227 234 236 / 0.07);
+    --band-alt: rgb(227 234 236 / 0.12);
+    --playhead: #ff8a3d;
+    --hover-bg: #1e292d;
+  }
+}
+:root[data-theme="dark"] {
+  --ack: #78a9ff;
+  --ack-idle: #4f6f9e;
+  --data-idle: #7d8a90;
+  --sent: #6b2a2a;
+  --unsent: #2d5228;
+  --ready: #2d5228;
+  --held: #4b3a78;
+  --acked: #26446e;
+  --window: #f0b400;
+  --start: #2d5228;
+  --expire: #b84444;
+  --band: rgb(227 234 236 / 0.07);
+  --band-alt: rgb(227 234 236 / 0.12);
+  --playhead: #ff8a3d;
+  --hover-bg: #1e292d;
+}
 
 /* Always show the scrollbar, so the width does not depend on the height. */
 html { overflow-y: scroll; }
 
-body {
-  margin: 0 auto;
-  max-width: 1440px;
-  padding: 16px;
-  background: var(--bg);
-  color: var(--fg);
-  font: 15px/1.4 "Open Sans", system-ui, sans-serif;
-}
+.icon-defs { position: absolute; }
+svg[aria-hidden="true"]:not(.icon-defs) { flex: none; }
+main { padding-block: var(--space-4); }
+main:focus { outline: none; }
+.hint { color: var(--color-on-surface-variant); font: var(--type-body-medium); }
 
-header.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-h1 { margin: 0 0 4px; font-size: 1.5rem; font-weight: 700; }
-h1 .version { font-size: 0.8rem; font-weight: 400; color: var(--muted); }
-.hint { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
+/* Views with running text keep a readable line length (§4.3). */
+.demos { max-width: 40rem; }
+.guide { max-width: 48rem; }
 
-/* Simulation: controls and state on the left, the diagram on the right,
-   which stays in view while the left column scrolls. The splitter between
-   them sets --side; the diagram keeps at least 380px. One column when narrow. */
+/* ---------- Simulation ----------
+   Controls and state on the left, the diagram on the right, which stays in
+   view while the left column scrolls. The splitter between them sets --side;
+   the diagram keeps at least 400px. One column when narrow. */
 .sim:not([hidden]) {
-  display: grid; gap: 5px; align-items: start;
-  grid-template-columns: clamp(300px, var(--side, 420px), calc(100% - 400px)) 10px minmax(0, 1fr);
+  display: grid; gap: var(--space-1); align-items: start;
+  grid-template-columns: clamp(300px, var(--side, 420px), calc(100% - 400px)) var(--space-4) minmax(0, 1fr);
 }
 /* One scrollbar, the page's: the diagram takes its whole height, the playback
    bar and the tape stay at the top above it, and the left column scrolls until
    its end is in view and then stays (its top is set in main.js). */
-.sim-side { position: sticky; top: 8px; }
-.sim-head { position: sticky; top: 0; z-index: 3; background: var(--bg); padding-top: 4px; }
+.sim-side { position: sticky; top: var(--space-2); min-width: 0; }
+.sim-main { min-width: 0; }
+.sim-head { position: sticky; top: 0; z-index: 3; background: var(--color-surface); padding-top: var(--space-1); }
 .sim-split { align-self: stretch; position: relative; cursor: col-resize; touch-action: none; }
 .sim-split::before {
-  content: ''; position: absolute; top: 0; bottom: 0; left: 4px;
-  border-left: 2px solid var(--border); border-radius: 1px;
+  content: ''; position: absolute; top: 0; bottom: 0; left: calc(50% - 1px);
+  border-left: 2px solid var(--color-outline);
 }
 .sim-split:hover::before, .sim-split:focus-visible::before, .sim.resizing .sim-split::before {
-  border-left-color: var(--ack);
+  border-left-color: var(--color-primary);
 }
-.sim-split:focus-visible { outline: none; }
 .sim.resizing { cursor: col-resize; user-select: none; }
 @media (max-width: 1000px) {
   .sim:not([hidden]) { grid-template-columns: minmax(0, 1fr); }
   .sim-side { position: static; }
   .sim-split { display: none; }
 }
-/* The other tabs keep a readable line length. */
-.demos, .guide { max-width: 980px; }
 
-#controls { display: flex; flex-direction: column; gap: 10px; }
-.groups { display: flex; flex-wrap: wrap; gap: 12px; }
-.groups > fieldset { flex: 1 1 320px; }
-.groups > fieldset:last-child { flex: 1.5 1 480px; }
+/* ---------- Controls ---------- */
+#controls { display: flex; flex-direction: column; gap: var(--space-3); }
 fieldset.group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 4px 12px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  margin: 0; padding: var(--space-1) var(--space-3) var(--space-3);
+  border: 1px solid var(--color-outline-variant); border-radius: var(--shape-md);
+  min-width: 0;
 }
-fieldset.group legend {
-  float: none;
-  width: auto;
-  margin: 0;
-  padding: 0 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-#controls label { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
-#controls .form-control { width: 3.6em; }
-#controls .form-control.narrow { width: 2.6em; }
-#controls input[name=tt], #controls input[name=d] { width: 4.2em; }
-/* Compact number fields: figures to the right and no spin buttons (the
-   arrow keys still step them). */
-#controls input[type=number] { appearance: textfield; padding-inline: 0.35rem; text-align: right; }
-#controls input[type=number]::-webkit-inner-spin-button,
-#controls input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-#controls .form-select { width: auto; }
-fieldset.group .line { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
-/* Computed values (a, 1 + 2a): drawn as a disabled form-control-sm. */
-.calc {
-  min-width: 2.6em;
-  padding: 0.25rem 0.35rem;
-  text-align: right;
-  border: var(--bs-border-width) solid var(--bs-border-color);
-  border-radius: var(--bs-border-radius-sm);
-  background-color: var(--bs-secondary-bg);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--bs-body-color);
-}
-/* Playback bar, centred above the diagram */
-.player { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 14px; margin: 0 0 8px; }
-.player label { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
-.player .form-select { width: auto; text-align: right; }
-/* A field changed from the loaded demo; the constraints' colours win. */
-#controls .changed:not(:disabled) { background-color: var(--changed-bg); }
-#controls .form-control.invalid, #controls .form-select.invalid {
-  border: 2px solid var(--bad);
-  background-color: var(--bad-bg);
-}
-#controls .form-control.warn { border: 2px solid var(--warn); background-color: var(--warn-bg); }
-output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--muted); }
+fieldset.group legend { padding: 0 var(--space-2); font: var(--type-label-large); font-weight: 600; }
+/* Compact: each label to the left of its control, several per line (a
+   deviation from §8.1 of the guide, see README «Style guide»). */
+.line { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; }
+.inline-field { display: inline-flex; gap: var(--space-2); align-items: center; margin: 0; font: var(--type-body-medium); }
+.inline-field .input, .inline-field .select { width: 4.5em; }
+.inline-field .input.narrow { width: 3.2em; }
+.inline-field .select { width: auto; }
+.inline-field .input { padding-inline: var(--space-2); }
+/* Number fields: figures to the right and no spin buttons (the arrow keys
+   and the mouse wheel still step them). */
+.input.num { text-align: right; font-variant-numeric: tabular-nums; appearance: textfield; }
+.input.num::-webkit-inner-spin-button, .input.num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+/* Computed values (a, 1 + 2a): read-only, as §8.6 draws them. */
+.calc { display: flex; align-items: center; justify-content: flex-end; background: var(--color-surface-container-high); }
+.input[readonly] { cursor: default; }
+/* A field changed from the loaded demo; the constraints' marks win. */
+#controls .changed:not([readonly]) { background-color: var(--color-primary-container); }
+/* A field that breaks one of the chapter's constraints (the panel below says which). */
+#controls .invalid { border: 2px solid var(--color-error); background-color: var(--color-error-container); }
+#controls .warn { border: 2px solid var(--color-warning); background-color: var(--color-warning-container); }
 
-#state { margin: 12px 0; display: flex; flex-direction: column; gap: 10px; }
-#state h2 { margin: 0; font-size: 1rem; font-weight: 700; }
-#state p { margin: 0; color: var(--muted); font-size: 0.9rem; }
-#state .bad { color: var(--bad); }
-#state .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px 24px; }
-#state section h2 { margin-bottom: 4px; }
+/* ---------- State: alerts, constraints, utilisation ---------- */
+#state { margin: var(--space-4) 0; display: flex; flex-direction: column; gap: var(--space-3); }
+#state .alert { margin: 0; }
+#state h2 { margin: 0 0 var(--space-1); font: var(--type-title-large); font-size: 1rem; font-weight: 600; }
+#state p { margin: 0; }
+#state .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: var(--space-3) var(--space-5); }
 
-.fail-banner {
-  padding: 8px 12px;
-  border: 2px solid var(--bad);
-  border-radius: 6px;
-  background: var(--bad-bg);
-  color: var(--bad) !important;
-  font-weight: 700;
-}
+.checks { list-style: none; margin: 0; padding: 0; font: var(--type-body-medium); }
+.checks li { display: flex; gap: var(--space-2); padding: var(--space-1) var(--space-2); border-radius: var(--shape-xs); }
+.checks li > svg { width: 1.125rem; height: 1.125rem; margin-top: 0.0625rem; }
+.checks .ok > svg { color: var(--color-success); }
+.checks .warn { background: var(--color-warning-container); }
+.checks .warn > svg { color: var(--color-warning); }
+.checks .error { background: var(--color-error-container); }
+.checks .error > svg { color: var(--color-error); }
+.checks .error > span { font-weight: 600; }
 
-.checks { list-style: none; margin: 0; padding: 0; font-size: 0.9rem; }
-.checks li { display: flex; gap: 6px; padding: 3px 6px; border-radius: 4px; }
-.checks .icon { font-weight: 700; width: 1em; flex: none; }
-.checks .ok .icon { color: var(--ok); }
-.checks .warn { background: var(--warn-bg); }
-.checks .warn .icon { color: var(--warn); }
-.checks .error { background: var(--bad-bg); color: var(--bad); font-weight: 600; }
-
-.metrics { display: grid; grid-template-columns: auto auto; gap: 2px 12px; margin: 0; font-size: 0.9rem; }
-.metrics dt { color: var(--muted); font-weight: 400; }
+.metrics { display: grid; grid-template-columns: auto auto; gap: var(--space-1) var(--space-3); margin: 0; font: var(--type-body-medium); }
+.metrics dt { color: var(--color-on-surface-variant); }
 .metrics dd { margin: 0; font-variant-numeric: tabular-nums; }
-#state .hint { margin-top: 4px; font-size: 0.8rem; }
+#state .hint { margin-top: var(--space-1); }
 
-#timeline-wrap {
-  border: 1px solid var(--border);
-  border-radius: 8px;
+/* ---------- Playback (§10.10) ---------- */
+.player { margin: 0 0 var(--space-2); }
+.player-controls { justify-content: center; gap: var(--space-2) var(--space-4); }
+.player-buttons { display: inline-flex; gap: var(--space-1); }
+.player-speed { display: inline-flex; align-items: center; gap: var(--space-2); }
+.player-speed .select { width: auto; }
+#counter { --seq-counter-width: 15ch; text-align: center; }
+.player-track { position: relative; }
+/* A mark at each step, under the slider */
+.player-marks { position: absolute; inset: 0 0.5rem; pointer-events: none; }
+.player-marks span {
+  position: absolute; top: calc(50% + 0.375rem); width: 1px; height: 0.375rem;
+  background: var(--color-on-surface-variant);
 }
-#timeline-wrap.failed { border: 2px solid var(--bad); }
+.btn-icon svg { width: 1.5rem; height: 1.5rem; }
+
+/* ---------- Diagram ---------- */
+#timeline-wrap { border: 1px solid var(--color-outline-variant); border-radius: var(--shape-sm); }
+#timeline-wrap.failed { border: 2px solid var(--color-error); }
 #timeline { display: block; width: 100%; height: auto; }
 
-/* SVG */
-#timeline text { fill: var(--fg); font-size: 15px; }
+#timeline text { fill: var(--color-on-surface); font-size: 15px; }
 #timeline .head { font-weight: 700; font-size: 18px; }
 #timeline .note { font-weight: 700; font-size: 13px; }
-#timeline .note.bad { fill: var(--bad); }
+#timeline .note.bad { fill: var(--color-error); }
 #timeline .ack-label { fill: var(--ack); }
 #timeline .time { fill: var(--playhead); font-size: 12px; }
 #timeline .axis { stroke: var(--line); stroke-width: 1.5; }
@@ -188,13 +191,18 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 
 .msg { cursor: pointer; }
 .msg .line, .msg .hit { fill: none; }
-.axis-break rect { fill: var(--bg); stroke: none; }
+.axis-break rect { fill: var(--color-surface); stroke: none; }
 .axis-break path { stroke: var(--line); stroke-width: 1.5; fill: none; }
-#timeline .gap { fill: var(--muted); font-size: 12px; font-style: italic; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
+#timeline .gap { fill: var(--color-on-surface-variant); font-size: 12px; font-style: italic; paint-order: stroke; stroke: var(--color-surface); stroke-width: 4px; }
 /* Data and ACKs differ in colour and width: data carry the payload. */
 .msg .line { stroke: var(--line); stroke-width: 2.4; }
 .msg.ack .line { stroke: var(--ack); stroke-width: 1.1; }
 .msg .hit { stroke: transparent; stroke-width: 14; }
+/* The arrow with the keyboard focus: a band in the focus colour behind it
+   (the hit line, drawn first) and the line thicker, as under the pointer. */
+.msg:focus { outline: none; }
+.msg:focus-visible .hit { stroke: var(--color-primary); stroke-width: 8; }
+.msg:focus-visible .line { stroke-width: 3.4; }
 .msg:hover .line { stroke-width: 3.4; }
 .msg.ack:hover .line { stroke-width: 2.2; }
 .msg .drop { fill: var(--line); }
@@ -203,22 +211,22 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .ah-ack { fill: var(--ack); }
 /* ACK with no effect on the sender: dashed, hollow head, grey label */
 .msg.ack.idle .line { stroke: var(--ack-idle); stroke-dasharray: 6 4; }
-.ah-idle { fill: var(--bg); stroke: var(--ack-idle); stroke-width: 1.3; }
+.ah-idle { fill: var(--color-surface); stroke: var(--ack-idle); stroke-width: 1.3; }
 .msg.data.idle .line { stroke: var(--data-idle); stroke-dasharray: 6 4; }
 .msg.data.idle .drop { fill: var(--data-idle); }
-.ah-idle-data { fill: var(--bg); stroke: var(--data-idle); stroke-width: 1.3; }
-#timeline .label.idle { fill: var(--muted); }
+.ah-idle-data { fill: var(--color-surface); stroke: var(--data-idle); stroke-width: 1.3; }
+#timeline .label.idle { fill: var(--color-on-surface-variant); }
 #timeline .ack-label.idle { fill: var(--ack-idle); }
-#timeline .label.idle .note { fill: var(--fg); }  /* «timeout!» keeps its colour */
+#timeline .label.idle .note { fill: var(--color-on-surface); }  /* «timeout!» keeps its colour */
 
-.timer-line { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; }
-.clock circle { stroke: var(--line); stroke-width: 1.2; fill: var(--bg); }
+.timer-line { stroke: var(--color-on-surface-variant); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.clock circle { stroke: var(--line); stroke-width: 1.2; fill: var(--color-surface); }
 .clock .hand, .clock .slash, .clock .ring { stroke: var(--line); stroke-width: 1.2; fill: none; }
 .clock.start circle { fill: var(--start); }
 .clock.expire circle { fill: var(--expire); }
 .clock .arrowhead { fill: var(--line); stroke: none; }
 
-.box { fill: var(--bg); stroke: var(--line); stroke-width: 1; }
+.box { fill: var(--color-surface); stroke: var(--line); stroke-width: 1; }
 .box.sent { fill: var(--sent); }
 .box.unsent { fill: var(--unsent); }
 .box.ready { fill: var(--ready); }
@@ -233,8 +241,8 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .line-bg.hl, .buf-row.hl .box:not(.sent, .unsent, .ready, .held, .acked) { fill: var(--hover-bg); }
 
 /* Tape: every message in order and the send window sliding over them */
-.tape { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
-.tape-title { font-size: 0.85rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.tape { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-2); }
+.tape-title { font: var(--type-body-medium); font-weight: 600; color: var(--color-on-surface-variant); white-space: nowrap; }
 /* Sizes in units of the diagram (--u, see ui/tape.js), as its buffer rows:
    cells 16 apart, 17 × 19 with their borders, so that neighbours share one;
    the frame 2.5 wide, 1 away from them. */
@@ -245,11 +253,11 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
   width: calc(17 * var(--u)); height: calc(19 * var(--u));
   display: grid; place-items: center;
   border: calc(1 * var(--u)) solid var(--line); border-radius: calc(3.5 * var(--u));
-  font-size: calc(12 * var(--u)); line-height: 1; background: var(--bg);
+  font-size: calc(12 * var(--u)); line-height: 1; background: var(--color-surface);
 }
 .tcell.sent { background: var(--sent); }
 .tcell.unsent { background: var(--unsent); }
-.tcell.none { border-style: dashed; border-color: var(--border); color: transparent; }
+.tcell.none { border-style: dashed; border-color: var(--color-outline-variant); color: transparent; }
 .tcell.pulse { animation: tape-pulse 1.5s ease-out; }  /* 1 s blue, then 0.5 s fading */
 /* The check of the diagram, on the top edge of the cell */
 .tcell.pulse::after {
@@ -260,8 +268,8 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
   animation: tape-tick 2s ease-out forwards;  /* 1.5 s, then 0.5 s fading */
 }
 @keyframes tape-pulse {
-  0%, 67% { background: var(--acked); border-color: var(--ack); color: var(--fg); }
-  100% { background: var(--bg); }
+  0%, 67% { background: var(--acked); border-color: var(--ack); color: var(--color-on-surface); }
+  100% { background: var(--color-surface); }
 }
 @keyframes tape-tick { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
 .tape-window {
@@ -277,42 +285,66 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .tape-strip.tape-fade .tcell.none { transition: opacity .5s .45s; }
 .tape-strip.tape-fade .tape-window { transition: left .45s ease-in-out, width .45s ease-in-out, opacity .5s 2s; }
 .legend-tape { --u: 1px; width: 69px; }
+/* Reduced motion: nothing slides; the colour changes that tell what was
+   confirmed stay (§6.4). */
 @media (prefers-reduced-motion: reduce) {
-  .tape-window, .tape-strip.tape-fade .tape-window, .tape-strip.tape-fade .tcell.none { transition: none; }
-  .tcell.pulse, .tcell.pulse::after { animation: none; }
+  .tape-window, .tape-strip.tape-fade .tape-window { transition: opacity .5s 2s; }
+  .tape-strip.tape-fade .tcell.none { transition: opacity .5s .45s; }
 }
 
-/* Box of a demo loaded with ?demo=ID */
-.demo {
-  margin-bottom: 12px;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--ack);
-  border-radius: 6px;
-}
-.demo-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.demo h2 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 700; }
+/* The diagram as a table */
+.events { margin-top: var(--space-3); }
+.events summary { cursor: pointer; color: var(--color-primary); min-height: 1.5rem; }
+.events .table-wrap { margin-top: var(--space-2); }
+
+/* ---------- Box of a demo loaded with ?demo=ID (an informative alert) ---------- */
+.demo { margin-bottom: var(--space-3); }
+.demo .alert-body { flex: 1; min-width: 0; }
+.demo-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-2); }
+.demo-head .btn { margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0 0; }
+.demo h2 { margin: 0 0 var(--space-1); font: var(--type-title-large); font-size: 1rem; font-weight: 600; }
 .demo p { margin: 0; }
 .demo .demo-changed {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-  margin-top: 6px; color: var(--muted); font-size: 0.9rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2);
+  margin-top: var(--space-2); color: var(--color-on-surface-variant); font: var(--type-body-medium);
 }
 
-/* Tabs, list of demos and guide */
-#tabs { margin-bottom: 12px; }
-.guide section, .demos section { margin-bottom: 20px; }
-.guide h2, .demos h2 { font-size: 1.15rem; font-weight: 700; margin: 0 0 8px; }
-.demo-item h3 { margin: 0 0 2px; font-size: 1rem; font-weight: 700; }
-.demo-item p { margin: 0; }
-.demo-item .demo-id { margin-right: 6px; color: var(--muted); }
-.demo-item.current { border-left: 4px solid var(--ack); }
-.legend { display: grid; grid-template-columns: 200px 1fr; gap: 10px 16px; align-items: center; margin: 0; }
-.legend dt { display: flex; justify-content: flex-end; font-weight: 400; }
+/* ---------- List of demos ---------- */
+.demos section + section { margin-top: var(--space-6); }
+.demo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.demo-item {
+  position: relative; padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-outline-variant); border-radius: var(--shape-sm);
+}
+.demo-item:hover { background: color-mix(in srgb, var(--color-on-surface) var(--state-hover), transparent); }
+.demo-item h3 { margin: 0 0 var(--space-1); font: var(--type-body-large); font-weight: 600; }
+/* The whole item answers the click: the link, its name, covers it (§6.8). */
+.demo-item a { color: var(--color-on-surface); text-decoration: none; }
+.demo-item a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+.demo-item a:focus-visible { outline: none; }
+.demo-item:has(a:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.demo-item p { margin: 0; color: var(--color-on-surface-variant); max-width: none; }
+.demo-item .demo-id { margin-right: var(--space-2); color: var(--color-on-surface-variant); }
+/* The demo loaded now: selected, with a bar of 3:1 (§10.1) */
+.demo-item.current { background: var(--color-primary-container); box-shadow: inset 3px 0 0 var(--color-primary); }
+
+/* ---------- Help ---------- */
+.legend { display: grid; grid-template-columns: 200px 1fr; gap: var(--space-3) var(--space-4); align-items: center; margin: 0; }
+.legend dt { display: flex; justify-content: flex-end; }
 .legend dd { margin: 0; }
 .legend-defs { position: absolute; }
 .legend-icon { overflow: visible; }
-.legend-icon text { fill: var(--fg); }
+.legend-icon text { fill: var(--color-on-surface); }
 .legend-icon .playhead { stroke: var(--playhead); stroke-width: 1.5; stroke-dasharray: 4 4; }
 .sample-note { font-weight: 700; font-size: 13px; white-space: nowrap; }
-.sample-note.bad { color: var(--bad); }
+.sample-note.bad { color: var(--color-error); }
 .legend dt:has(.sample-note) { flex-direction: column; align-items: flex-end; gap: 2px; }
+.formula { font-family: var(--font-mono); }
+.keys { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-4); margin: 0 0 var(--space-4); }
+.keys dt { white-space: nowrap; }
+.keys dd { margin: 0; }
+kbd { padding: 0 0.3em; border: 1px solid var(--color-outline); border-radius: var(--shape-xs); background: var(--color-surface-container); }
+@media (max-width: 600px) {
+  .legend { grid-template-columns: 1fr; }
+  .legend dt { justify-content: flex-start; }
+}

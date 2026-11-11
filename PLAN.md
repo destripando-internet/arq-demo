@@ -24,9 +24,10 @@ corrupted message is modelled as a lost one: the receiver discards it), NACK.
 
 - HTML + CSS + JavaScript with ES modules (`<script type="module">`).
 - SVG generated from JS.
-- No framework, no bundler, no `npm` dependencies. The controls use the CSS
-  of Bootstrap 5.3 and Bootstrap Icons 1.11 from jsDelivr (pinned versions);
-  no JavaScript library.
+- No framework, no bundler, no `npm` dependencies. The interface follows
+  the style guide `web-app-style-guide` (its CSS and scripts copied in
+  `style-guide/`, see the README); the icons are inline SVG. Nothing is
+  loaded from other sites.
 - **Node.js is not required.** The app runs in any browser served by any
   static server; the tests run in the browser too (`test-web/`). Node is
   only an alternative way to run the same tests (`node --test`).

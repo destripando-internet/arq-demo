@@ -10,14 +10,15 @@ from one of the [demos](#demos).
 ## What it shows
 
 - The time diagram of the sender and the receiver, drawn as in the book's
-  figures. It plays back at 0.5× to 4× or goes event by event, forwards and
-  backwards.
-- Clicking an arrow loses it, or delivers it if it was lost. Random losses
-  are set as a percentage, from 0 to 50.
+  figures. It plays back at 0.5× to 4× or goes step by step, forwards and
+  backwards; the slider shows any instant. Below it, the same as a table.
+- Clicking an arrow loses it, or delivers it if it was lost (also with the
+  keyboard: ↑ and ↓ go through the arrows, Enter loses or delivers). Random
+  losses are set as a percentage, from 0 to 50.
 - Above the diagram, the sender's messages in order, with the send window
   as a frame that slides over them as ACKs arrive.
-- The chapter's constraints, marked ✓, ⚠ or ✗ and highlighted on the
-  controls: the largest window for k bits, a window of at least 1 + 2a to
+- The chapter's constraints, marked as met, worse or failing and
+  highlighted on the controls: the largest window for k bits, a window of at least 1 + 2a to
   fill the channel, a timer longer than the RTT and cumulative ACKs in
   go-back-N. A banner warns when the receiver delivers a duplicate as a new
   message or the sender would retransmit forever.
@@ -28,17 +29,19 @@ from one of the [demos](#demos).
   and a geostationary satellite (times in ms). Long waits are drawn
   compressed.
 - After changing a demo, «Restore», in its box, loads it again.
-- The app opens on the «Demos» tab, the list of [demos](#demos) by section;
-  choosing one loads it in the «Simulation» tab.
-- The «Guide» tab explains the legend, the constraints and the utilisation.
+- The app opens on the «Demos» view, the list of [demos](#demos) by
+  section; choosing one loads it in the «Simulation» view.
+- «Help» explains the legend, the constraints, the utilisation and the
+  keyboard.
+- Light and dark themes, following the system or chosen in the header.
 
 ## Demos
 
-The app lists them in its «Demos» tab, with the same sections and texts.
+The app lists them in its «Demos» view, with the same sections and texts.
 Each link (`?demo=ID`) loads a scenario ready to play from the start;
 above it, a box explains what the demo shows with the text below, in
-English or Spanish as the UI. ▶ plays it, ⏭ jumps to the end, and clicking
-an arrow loses or delivers it. The links point to the published app; to try local changes,
+English or Spanish as the UI. «Play» plays it, «End» jumps to the end, and
+clicking an arrow loses or delivers it. The links point to the published app; to try local changes,
 serve the repository (see [Running locally](#running-locally)) and use
 <http://localhost:8765/?demo=ID> instead.
 
@@ -52,7 +55,7 @@ Times are abstract units, except with the real link presets (ms).
 
 ### Getting started
 
-- **T1** [How to read the diagram](https://destripando-internet.github.io/arq-demo/?demo=T1). Stop-and-wait with a = 1 and three messages, none lost. Time runs downwards, with the sender on the left and the receiver on the right. Each «data» arrow is a message and each «ack» arrow comes back to confirm it; the sender waits for it before sending the next one. Press ▶ to play it, or ⏭ to see the end. Then click an arrow to «lose» that message: its timer expires and the sender retransmits it. The Guide tab explains every symbol.
+- **T1** [How to read the diagram](https://destripando-internet.github.io/arq-demo/?demo=T1). Stop-and-wait with a = 1 and three messages, none lost. Time runs downwards, with the sender on the left and the receiver on the right. Each «data» arrow is a message and each «ack» arrow comes back to confirm it; the sender waits for it before sending the next one. Press «Play» to play it, or «End» to see the end. Then click an arrow to «lose» that message: its timer expires and the sender retransmits it. The Help explains every symbol.
 
 ### Stop-and-wait
 
@@ -98,12 +101,68 @@ clone with `git config core.hooksPath .githooks`.
 
 ## Technology
 
-HTML + JavaScript (ES modules) + SVG, with no build step. Bootstrap 5 and
-Bootstrap Icons (CSS only) are loaded from the jsDelivr CDN; there are no
-other dependencies. It is published as is on GitHub Pages, from the
-`master` branch, root folder (`.nojekyll` makes Pages serve the files
-without processing them). The user interface is in English and Spanish
-(ES/EN switch); code, comments and documentation are in English.
+HTML + JavaScript (ES modules) + SVG, with no build step and no
+dependencies: the styles come from the style guide (see
+[Style guide](#style-guide)), copied in `style-guide/`, and the icons are
+inline SVG. It is published as is on GitHub Pages, from the `master`
+branch, root folder (`.nojekyll` makes Pages serve the files without
+processing them). The user interface is in English and Spanish (language
+select in the header); code, comments and documentation are in English.
+
+## Style guide
+
+The interface follows the style guide `web-app-style-guide`
+(`~/repos/web-app-style-guide/STYLE_GUIDE.md`), **version 1.6**. Its files
+`tokens.css`, `theme.js` and `components.js` are copied unmodified in
+`style-guide/`, with the licence of the icons; what belongs to this app is
+in `style.css`, loaded after `tokens.css`. To update to a newer version,
+copy them again and review what changed (its §1.7).
+
+Decisions of its §14 that apply here:
+
+- **D6-C**, action not available: the playback buttons that would do
+  nothing at the start or at the end stay in place with `aria-disabled` and
+  the reason in their tooltip. The fields that stop-and-wait fixes (k, Ws)
+  are read-only, with the reason in their help; the ACK select keeps its
+  only option.
+- **D13-A**, icons: Material Symbols, outlined, weight 400, inline SVG
+  (`skip_previous`, `navigate_before`, `play_arrow`, `pause`,
+  `navigate_next`, `skip_next`, `close`, `undo`, `info`, `check_circle`,
+  `warning`, `error`).
+- **D24**, alternative to dragging the column splitter: none (see the
+  deviations).
+- **D25-B**, playback controls: plain buttons in the tab order, not
+  `role="toolbar"`, because ← and → step through the simulation (§10.10).
+- The rest use their default value, or do not apply (no tree, tabs,
+  editors, settings, live output, toasts or export).
+
+Deviations:
+
+- **Compact controls** (§8.1, §7.4, §5): each label to the left of its
+  control, several per line, with the guide's small controls
+  (`.input-sm`, `.select-sm`, 32 px) and the help of each field in its
+  tooltip (`data-tooltip`, also shown with the keyboard focus and read by
+  screen readers). The panel of parameters sits next to the diagram, and
+  with the labels above and the help visible it took twice the height.
+- **Column splitter** (§6.1): no alternative to dragging (D24) and no
+  folding with Enter; it moves with ← and →, Home and End, and a
+  double-click restores it.
+- **Colours of the diagram** (§3.5): its own colours, tuned for the book's
+  figures (data, ACKs, the cells of the buffers, the timers, the window),
+  not the guide's categorical palette, with a variant for the dark theme.
+  The colours with a role in the guide (error, warning, success, focus,
+  selection) come from its tokens, and the interface outside the diagram no
+  longer uses the blue of the ACKs.
+- **Constraints of the chapter** (§8.1, §8.3): a field that breaks one is
+  not an input error, so it gets no error message: it is marked with the
+  border and background of error or warning, and the «Constraints» panel
+  says why.
+- **Texts** (§7.3): in `ui/i18n.js`, not in `i18n/<code>.json`: many are
+  functions that build the sentence with its numbers and plurals. Both
+  languages keep the same keys by hand; there is no automatic check.
+- **Width** (§6.1): the content goes up to 90 rem, not 72, because the
+  simulation needs the width; the views with running text keep their own
+  measure.
 
 ## Running locally
 
@@ -153,7 +212,8 @@ shown complete:
 | `t` | instant shown; `end` for the end |
 | `lang` | `en` or `es`; by default, the last choice or the browser's language |
 
-`#guide` at the end opens the «Guide» tab (legend and explanations).
+At the end, `#demos`, `#sim` or `#help` opens that view (`#guide`, from
+older links, opens the help).
 
 ## Documentation
 

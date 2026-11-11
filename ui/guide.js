@@ -1,4 +1,4 @@
-// «Guide» tab: legend of the diagram and explanations of the utilisation,
+// Help view: legend of the diagram and explanations of the utilisation,
 // the constraints and the controls. The icons use the diagram's own drawing
 // functions and CSS classes, so they always look the same.
 
@@ -75,5 +75,6 @@ export function renderGuide() {
     </section>
     <section><h2>${t('guide.utilisation')}</h2>${t('guide.utilisation.body')}</section>
     <section><h2>${t('guide.constraints')}</h2>${t('guide.constraints.body')}</section>
-    <section><h2>${t('guide.usage')}</h2>${t('guide.usage.body')}</section>`;
+    <section><h2>${t('guide.usage')}</h2>${t('guide.usage.body')}</section>
+    <section><h2>${t('guide.keys')}</h2>${t('guide.keys.body')}</section>`;
 }

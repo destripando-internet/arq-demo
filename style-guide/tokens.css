@@ -1,0 +1,693 @@
+/* ==========================================================================
+   tokens.css — Guía de estilo para aplicaciones web sencillas v1.3
+   Fuente de verdad de los valores visuales. Ver STYLE_GUIDE.md.
+   Roles de color, tipografía, forma y estados según Material Design 3;
+   formularios según GOV.UK Design System.
+   ========================================================================== */
+
+/* ---------- Roles de color: claro (por defecto) ---------- */
+:root {
+  color-scheme: light dark;
+
+  --color-surface: #ffffff;
+  --color-surface-container: #f4f6f7;
+  --color-surface-container-high: #e9edef;
+  --color-on-surface: #172126;
+  --color-on-surface-variant: #4f5d65;
+  --color-outline: #7a868d;
+  --color-outline-variant: #c9d1d5;
+  --color-primary: #0b6670;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #e3f1f2;
+  --color-error: #b3261e;
+  --color-on-error: #ffffff;
+  --color-error-container: #fbeaea;
+  --color-success: #1d6b38;
+  --color-success-container: #e7f4ec;
+  --color-warning: #8a5300;
+  --color-warning-container: #fdf1dc;
+  --color-scrim: rgb(16 23 25 / 0.5);
+
+  /* Paleta categórica de diagramas (§3.5): Carbon, en su orden. Fondo: surface o surface-container */
+  --color-data-1: #6929c4;   /* Purple 70 */
+  --color-data-2: #1192e8;   /* Cyan 50 */
+  --color-data-3: #005d5d;   /* Teal 70 */
+  --color-data-4: #9f1853;   /* Magenta 70 */
+  --color-data-5: #fa4d56;   /* Red 50 */
+  --color-data-6: #570408;   /* Red 90 */
+  --color-data-7: #198038;   /* Green 60 */
+  --color-data-8: #002d9c;   /* Blue 80 */
+  --color-data-9: #ee538b;   /* Magenta 50 */
+  --color-data-10: #b28600;  /* Yellow 50 */
+  --color-data-11: #009d9a;  /* Teal 50 */
+  --color-data-12: #012749;  /* Cyan 90 */
+  --color-data-13: #8a3800;  /* Orange 70 */
+  --color-data-14: #a56eff;  /* Purple 50 */
+
+  /* Capas de estado M3 */
+  --state-hover: 8%;
+  --state-press: 10%;
+  --state-disabled-content: 0.38;
+
+  /* Tipografía */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Liberation Sans", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+  --type-body-medium: 400 0.875rem/1.25rem var(--font-sans);
+  --type-body-large: 400 1rem/1.5rem var(--font-sans);
+  --type-label-large: 500 0.875rem/1.25rem var(--font-sans);
+  --type-label-medium: 500 0.75rem/1rem var(--font-sans);
+  --type-title-large: 500 1.375rem/1.75rem var(--font-sans);
+  --type-headline-small: 500 1.5rem/2rem var(--font-sans);
+  --type-headline-medium: 500 1.75rem/2.25rem var(--font-sans);
+
+  /* Espaciado (rejilla 4/8) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* Forma (escala M3) */
+  --shape-xs: 4px;
+  --shape-sm: 8px;
+  --shape-md: 12px;
+  --shape-full: 9999px;
+
+  /* Dimensiones */
+  --control-height: 2.75rem;   /* 44 px: HIG / WCAG 2.5.5 */
+  --control-height-sm: 2rem;   /* 32 px: barras de herramientas densas */
+  --row-height: 2rem;          /* 32 px: filas de árbol (WCAG 2.5.8: mínimo 24 px) */
+  --tree-indent: 1.5rem;       /* sangría por nivel = ancho del chevron */
+  --container: 72rem;
+  --form-width: 36rem;
+
+  /* Elevación y movimiento */
+  --elevation-3: 0 4px 8px 3px rgb(16 23 25 / 0.15), 0 1px 3px rgb(16 23 25 / 0.3);
+  --motion-short: 150ms;
+  --motion-easing: cubic-bezier(0.2, 0, 0, 1); /* M3 standard */
+}
+
+@media (pointer: coarse) {
+  :root { --control-height: 3rem; --control-height-sm: 3rem; --row-height: 3rem; } /* 48 px: M3 */
+}
+
+/* ---------- Roles de color: oscuro ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-surface: #101719;
+    --color-surface-container: #172124;
+    --color-surface-container-high: #212d31;
+    --color-on-surface: #e3eaec;
+    --color-on-surface-variant: #a3b1b7;
+    --color-outline: #6b7b82;
+    --color-outline-variant: #2f3d42;
+    --color-primary: #5cc4cf;
+    --color-on-primary: #062a2e;
+    --color-primary-container: #0f3034;
+    --color-error: #ff8f87;
+    --color-on-error: #3a0a07;
+    --color-error-container: #3a1a18;
+    --color-success: #6fd394;
+    --color-success-container: #13301f;
+    --color-warning: #f2b65a;
+    --color-warning-container: #3a2a0e;
+    --color-scrim: rgb(0 0 0 / 0.6);
+    --elevation-3: 0 4px 8px 3px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.5);
+    --color-data-1: #8a3ffc;   /* Purple 60 */
+    --color-data-2: #33b1ff;   /* Cyan 40 */
+    --color-data-3: #007d79;   /* Teal 60 */
+    --color-data-4: #ff7eb6;   /* Magenta 40 */
+    --color-data-5: #fa4d56;   /* Red 50 */
+    --color-data-6: #fff1f1;   /* Red 10 */
+    --color-data-7: #6fdc8c;   /* Green 30 */
+    --color-data-8: #4589ff;   /* Blue 50 */
+    --color-data-9: #d02670;   /* Magenta 60 */
+    --color-data-10: #d2a106;  /* Yellow 40 */
+    --color-data-11: #08bdba;  /* Teal 40 */
+    --color-data-12: #bae6ff;  /* Cyan 20 */
+    --color-data-13: #ba4e00;  /* Orange 60 */
+    --color-data-14: #d4bbff;  /* Purple 30 */
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-surface: #101719;
+  --color-surface-container: #172124;
+  --color-surface-container-high: #212d31;
+  --color-on-surface: #e3eaec;
+  --color-on-surface-variant: #a3b1b7;
+  --color-outline: #6b7b82;
+  --color-outline-variant: #2f3d42;
+  --color-primary: #5cc4cf;
+  --color-on-primary: #062a2e;
+  --color-primary-container: #0f3034;
+  --color-error: #ff8f87;
+  --color-on-error: #3a0a07;
+  --color-error-container: #3a1a18;
+  --color-success: #6fd394;
+  --color-success-container: #13301f;
+  --color-warning: #f2b65a;
+  --color-warning-container: #3a2a0e;
+  --color-scrim: rgb(0 0 0 / 0.6);
+  --elevation-3: 0 4px 8px 3px rgb(0 0 0 / 0.4), 0 1px 3px rgb(0 0 0 / 0.5);
+  --color-data-1: #8a3ffc;
+  --color-data-2: #33b1ff;
+  --color-data-3: #007d79;
+  --color-data-4: #ff7eb6;
+  --color-data-5: #fa4d56;
+  --color-data-6: #fff1f1;
+  --color-data-7: #6fdc8c;
+  --color-data-8: #4589ff;
+  --color-data-9: #d02670;
+  --color-data-10: #d2a106;
+  --color-data-11: #08bdba;
+  --color-data-12: #bae6ff;
+  --color-data-13: #ba4e00;
+  --color-data-14: #d4bbff;
+}
+:root[data-theme="light"] { color-scheme: light; }
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; accent-color: var(--color-primary); scrollbar-color: var(--color-outline) transparent; }
+::selection { background: var(--color-primary-container); color: var(--color-on-surface); }  /* superficies del navegador (§11) */
+body { margin: 0; background: var(--color-surface); color: var(--color-on-surface); font: var(--type-body-large); }
+
+h1, h2, h3 { margin: 0 0 var(--space-3); text-wrap: balance; }
+* + h2 { margin-top: var(--space-6); }  /* más espacio encima que debajo (§5) */
+* + h3 { margin-top: var(--space-5); }
+h1 { font: var(--type-headline-medium); }
+h2 { font: var(--type-headline-small); }
+h3 { font: var(--type-title-large); }
+p { margin: 0 0 var(--space-4); text-wrap: pretty; }
+/* La medida de lectura (≈ 75 caracteres reales, §4.3), para el texto corrido de la columna; dentro de una caja visible
+   (celda, tarjeta, aviso, campo, diálogo) el texto llega hasta su borde. */
+:where(main, section, article, .prose) > p { max-width: 60ch; }
+a { color: var(--color-primary); text-underline-offset: 0.15em; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.9em; }
+code { background: var(--color-surface-container-high); padding: 0.1em 0.35em; border-radius: var(--shape-xs); }
+[role="timer"], time { font-variant-numeric: tabular-nums; }  /* los números que cambian no mueven lo que los rodea */
+
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.muted { color: var(--color-on-surface-variant); }
+.small { font: var(--type-body-medium); }
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: absolute; left: var(--space-2); top: -4rem; z-index: 100;
+  background: var(--color-primary); color: var(--color-on-primary);
+  padding: var(--space-2) var(--space-3); border-radius: var(--shape-sm);
+}
+.skip-link:focus { top: var(--space-2); }
+
+/* ---------- Layout ---------- */
+.container { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
+@media (min-width: 600px) { .container { padding-inline: var(--space-5); } }
+
+.app-header { background: var(--color-surface-container); border-bottom: 1px solid var(--color-outline-variant); }
+.app-header .container { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-5); padding-block: var(--space-2); }
+.app-name { font: var(--type-title-large); font-size: 1.125rem; color: var(--color-on-surface); text-decoration: none; }
+.app-nav { display: flex; gap: var(--space-4); }
+.app-nav a { color: var(--color-on-surface); text-decoration: none; display: inline-flex; align-items: center; min-height: var(--control-height); }
+.app-nav a[aria-current="page"] { color: var(--color-primary); box-shadow: inset 0 -3px 0 var(--color-primary); }
+.app-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-left: auto; }
+.app-tools .select { width: auto; }
+.app-tools-group { display: inline-flex; align-items: center; }  /* ajustes y ayuda, sin espacio entre ellos (§7.1) */
+.app-footer { border-top: 1px solid var(--color-outline-variant); margin-top: var(--space-7); padding-block: var(--space-5); color: var(--color-on-surface-variant); font: var(--type-body-medium); }
+
+/* Barra de estado (§6.1): el pie de una aplicación de trabajo, siempre visible abajo. El cuerpo es una
+   columna de al menos el alto de la ventana para que la barra quede abajo también con poco contenido;
+   en una columna flexible el margen automático de .container encogería <main>, de ahí su ancho. */
+body:has(> .status-bar) { display: flex; flex-direction: column; min-height: 100dvh; }
+body:has(> .status-bar) > main { flex: 1 0 auto; width: 100%; }
+html:has(> body > .status-bar) { scroll-padding-bottom: var(--space-7); }
+.status-bar {
+  position: sticky; bottom: 0; z-index: 10;
+  background: var(--color-surface-container); border-top: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface-variant); font: var(--type-body-medium);
+}
+.status-bar .container { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-5); padding-block: var(--space-1); }
+.status-bar-message { margin: 0 0 0 auto; max-width: none; color: var(--color-on-surface); text-align: right; }
+
+/* ---------- Botones ---------- */
+.btn {
+  --btn-bg: transparent; --btn-fg: var(--color-primary);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: var(--control-height); padding: 0 var(--space-5);
+  font: var(--type-label-large); color: var(--btn-fg); background: var(--btn-bg);
+  border: 1px solid var(--color-outline); border-radius: var(--shape-sm);
+  cursor: pointer; text-decoration: none;
+  transition: background-color var(--motion-short) var(--motion-easing);
+}
+.btn:hover { background: color-mix(in srgb, var(--btn-bg), var(--btn-fg) var(--state-hover)); }
+.btn:active { background: color-mix(in srgb, var(--btn-bg), var(--btn-fg) var(--state-press)); }
+.btn-primary { --btn-bg: var(--color-primary); --btn-fg: var(--color-on-primary); border-color: transparent; }
+.btn-text { border-color: transparent; padding-inline: var(--space-3); }
+.btn-danger { --btn-fg: var(--color-error); border-color: var(--color-error); }
+.btn-tonal { --btn-bg: var(--color-primary-container); --btn-fg: var(--color-primary); border-color: transparent; }
+/* Botón de alternancia (§9.1): el estado pulsado no depende solo del color: borde de 2 px */
+.btn[aria-pressed="true"] { --btn-bg: var(--color-primary-container); border-color: var(--color-primary); box-shadow: inset 0 0 0 1px var(--color-primary); }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: var(--state-disabled-content); cursor: not-allowed; }
+.btn-icon { width: var(--control-height); padding: 0; }
+.btn svg { width: 1.125rem; height: 1.125rem; flex: none; }
+.btn[aria-disabled="true"]:hover, .btn[aria-disabled="true"]:active { background: var(--btn-bg); }
+.btn-sm { min-height: var(--control-height-sm); padding-inline: var(--space-3); }
+.btn-icon.btn-sm { width: var(--control-height-sm); padding: 0; }
+.btn .progress-circular { width: 1.125rem; height: 1.125rem; border-width: 2px; }
+/* Grupo de botones unidos: las acciones que cambian el estado de un objeto (D12-B), con role="group" y nombre (§9.5) */
+.btn-group { display: inline-flex; flex-wrap: wrap; }
+.btn-group > .btn { border-radius: 0; }
+.btn-group > .btn + .btn { margin-left: -1px; }
+.btn-group > .btn:first-child { border-start-start-radius: var(--shape-sm); border-end-start-radius: var(--shape-sm); }
+.btn-group > .btn:last-child { border-start-end-radius: var(--shape-sm); border-end-end-radius: var(--shape-sm); }
+.btn-group > .btn:focus-visible { position: relative; z-index: 1; }
+/* Pareja de iconos-botón inseparables: Expandir todo y Contraer todo (D2-B) */
+.btn-pair { display: inline-flex; gap: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-6); }
+.actions-end { justify-content: flex-end; }
+
+
+/* ---------- Formularios (GOV.UK) ---------- */
+.form { max-width: var(--form-width); }
+.field { margin: 0 0 var(--space-5); padding: 0; border: 0; min-width: 0; }
+.field > label, .field > legend { display: block; font-weight: 600; margin-bottom: var(--space-1); padding: 0; }
+.field-optional { font-weight: 400; }
+.field-hint { margin: 0 0 var(--space-2); font: var(--type-body-medium); color: var(--color-on-surface-variant); }
+.field-error { margin: 0 0 var(--space-2); font: var(--type-body-medium); font-weight: 600; color: var(--color-error); }
+.field-error[hidden] { display: none; }
+.field-has-error { border-left: 4px solid var(--color-error); padding-left: var(--space-3); }
+
+.input, .select, .textarea {
+  display: block; width: 100%; min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  font: var(--type-body-large); color: var(--color-on-surface); background: var(--color-surface);
+  border: 1px solid var(--color-outline); border-radius: var(--shape-xs); caret-color: var(--color-primary);
+}
+.textarea { min-height: 7rem; resize: vertical; }
+.input-sm, .select-sm { min-height: var(--control-height-sm); padding-block: var(--space-1); font: var(--type-body-medium); }
+@media (pointer: coarse) { .input-sm, .select-sm { font-size: 1rem; } }  /* iOS amplía la página con campos de menos de 16 px (§4.3) */
+.input.mono, .textarea.mono { font-family: var(--font-mono); font-size: 0.9375rem; }
+.input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline-offset: 0; }
+[aria-invalid="true"].input, [aria-invalid="true"].select, [aria-invalid="true"].textarea {
+  border: 2px solid var(--color-error); padding: calc(var(--space-2) - 1px) calc(var(--space-3) - 1px);
+}
+.w-5ch { max-width: calc(5ch + 1.75rem); }
+.w-10ch { max-width: calc(10ch + 1.75rem); }
+.w-20ch { max-width: calc(20ch + 1.75rem); }
+.w-30ch { max-width: calc(30ch + 1.75rem); }
+
+.choice { display: flex; align-items: center; gap: var(--space-3); min-height: var(--control-height); }
+.choice input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--color-primary); flex: none; }
+
+/* Solo lectura: readonly, no disabled (§8.6) */
+.input[readonly], .textarea[readonly] { background: var(--color-surface-container-high); }
+
+/* Interruptor: ajuste que se aplica al momento (§7.5) */
+.switch, .choice input.switch {
+  appearance: none; position: relative; flex: none; margin: 0; cursor: pointer;
+  width: 2.25rem; height: 1.25rem; border-radius: var(--shape-full);
+  background: var(--color-surface-container-high); border: 1px solid var(--color-outline);
+  transition: background-color var(--motion-short) var(--motion-easing);
+}
+.switch::before {
+  content: ""; position: absolute; top: 2px; left: 2px; width: calc(1.25rem - 6px); height: calc(1.25rem - 6px);
+  border-radius: 50%; background: var(--color-outline);
+  transition: transform var(--motion-short) var(--motion-easing);
+}
+.switch:checked { background: var(--color-primary); border-color: var(--color-primary); }
+.switch:checked::before { transform: translateX(1rem); background: var(--color-on-primary); }
+.setting { display: flex; gap: var(--space-3); align-items: flex-start; padding-block: var(--space-2); }
+.setting > .switch { margin-top: 0.125rem; }
+.setting label { font-weight: 600; }
+.setting .field-hint { margin: var(--space-1) 0 0; }
+
+/* Control segmentado (§8.13): radios nativos en un grupo con nombre (role="radiogroup" y aria-label), que las flechas
+   recorren; la opción elegida lleva una marca además del color */
+.segmented { display: inline-flex; flex-wrap: wrap; }
+.segmented label { position: relative; display: inline-flex; }
+.segmented input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.segmented span {
+  display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height-sm);
+  padding: 0 var(--space-3); margin-left: -1px; font: var(--type-label-large); color: var(--color-on-surface);
+  border: 1px solid var(--color-outline);
+}
+.segmented label:first-child span { margin-left: 0; border-start-start-radius: var(--shape-sm); border-end-start-radius: var(--shape-sm); }
+.segmented label:last-child span { border-start-end-radius: var(--shape-sm); border-end-end-radius: var(--shape-sm); }
+.segmented input:hover + span { background: color-mix(in srgb, var(--color-on-surface) var(--state-hover), transparent); }
+.segmented input:checked + span { background: var(--color-primary-container); }
+.segmented input:checked + span::before {
+  content: ""; width: 0.375rem; height: 0.75rem; margin: -0.2rem 0.125rem 0 0;
+  border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.segmented input:focus-visible + span { position: relative; z-index: 1; outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+/* Indicador de pasos de un asistente (§8.11): el actual con aria-current="step"; los completados con una marca, y
+   pulsables si se puede volver a ellos (D19-B) */
+.steps { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin: 0 0 var(--space-5); padding: 0; list-style: none; }
+.step { display: flex; align-items: center; font: var(--type-label-large); color: var(--color-on-surface-variant); }
+.step-label {
+  display: inline-flex; align-items: center; gap: var(--space-2); min-height: 1.5rem; padding: 0;
+  border: 0; background: none; font: inherit; color: inherit;
+}
+button.step-label { cursor: pointer; color: var(--color-primary); text-decoration: underline; text-underline-offset: 0.15em; }
+.step-mark {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 1.5rem; height: 1.5rem;
+  border: 1px solid var(--color-outline); border-radius: 50%; font: var(--type-label-medium);
+}
+.step-mark svg { width: 1rem; height: 1rem; }
+.step-done .step-mark, .step[aria-current="step"] .step-mark { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
+.step[aria-current="step"] { color: var(--color-on-surface); font-weight: 700; }
+
+/* Tabla editable (§8.7): un campo por celda (.input-sm), que se recorre con Tab; el botón de quitar, al final */
+.table-edit td { padding-block: var(--space-1); vertical-align: top; white-space: normal; }
+.table-edit .input { min-width: 14ch; }  /* en pantallas estrechas, la tabla se desplaza dentro de su caja */
+.table-edit td .field-error { margin: var(--space-1) 0; }
+.table-edit td.field-has-error { border-left: 4px solid var(--color-error); padding-left: var(--space-2); }
+.table-edit td:last-child { width: 1%; }
+
+/* Problemas de un documento (§8.8): errores y avisos con icono y texto, no solo con color */
+.problems { list-style: none; margin: 0 0 var(--space-4); padding: 0; font: var(--type-body-medium); }
+.problems li { display: flex; gap: var(--space-2); align-items: flex-start; padding-block: var(--space-1); }
+.problems svg { width: 1.125rem; height: 1.125rem; flex: none; }
+.problem-error svg { color: var(--color-error); }
+.problem-warning svg { color: var(--color-warning); }
+
+/* Editor de texto o código (§8.10): números de línea, y la parte resaltada con fondo y una marca en el margen */
+.code-editor {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); overflow: hidden;
+  border: 1px solid var(--color-outline); border-radius: var(--shape-xs); background: var(--color-surface);
+  --code-font: 400 0.875rem/1.5 var(--font-mono);
+}
+.code-editor:focus-within { outline: 2px solid var(--color-primary); outline-offset: 0; }
+.code-gutter {
+  margin: 0; padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3); overflow: hidden;
+  font: var(--code-font); text-align: right; color: var(--color-on-surface-variant);
+  background: var(--color-surface-container); user-select: none;
+}
+.code-gutter span { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-1); padding-right: var(--space-1); }
+.code-gutter .is-highlighted { color: var(--color-primary); box-shadow: inset -3px 0 0 var(--color-primary); }
+.code-gutter .has-error { color: var(--color-error); font-weight: 700; }
+.code-gutter svg { width: 0.875rem; height: 0.875rem; }
+.code-area { position: relative; min-width: 0; }
+.code-highlight { position: absolute; left: 0; right: 0; background: var(--color-primary-container); pointer-events: none; }
+.code-area textarea {
+  position: relative; display: block; width: 100%; min-height: 12rem; margin: 0; padding: var(--space-2) var(--space-3);
+  border: 0; outline: none; resize: vertical; font: var(--code-font); white-space: pre; overflow: auto; tab-size: 2;
+  color: var(--color-on-surface); background: transparent; caret-color: var(--color-primary);
+}
+
+details.help summary { cursor: pointer; color: var(--color-primary); text-decoration: underline; text-underline-offset: 0.15em; min-height: 1.5rem; }
+details.help > div { margin-top: var(--space-2); padding-left: var(--space-4); border-left: 4px solid var(--color-outline-variant); }  /* GOV.UK Details */
+
+/* ---------- Avisos ---------- */
+.alert {
+  --alert-accent: var(--color-primary);
+  display: flex; gap: var(--space-3); align-items: flex-start;
+  padding: var(--space-4); margin-bottom: var(--space-5);
+  border: 1px solid var(--alert-accent); border-radius: var(--shape-sm);  /* sin franja lateral (§3.4) */
+  background: var(--color-primary-container); color: var(--color-on-surface);
+}
+.alert > svg { width: 1.25rem; height: 1.25rem; flex: none; margin-top: 0.15em; color: var(--alert-accent); }
+.alert-body > :last-child { margin-bottom: 0; }
+.alert-title { font-weight: 600; margin: 0 0 var(--space-1); }
+.alert-error { --alert-accent: var(--color-error); background: var(--color-error-container); }
+.alert-success { --alert-accent: var(--color-success); background: var(--color-success-container); }
+.alert-warning { --alert-accent: var(--color-warning); background: var(--color-warning-container); }
+.alert ul { margin: var(--space-2) 0 0; padding-left: var(--space-5); }
+.alert-error ul a { color: var(--color-error); font-weight: 600; }
+
+/* ---------- Tablas ---------- */
+.table-wrap { overflow-x: auto; border: 1px solid var(--color-outline-variant); border-radius: var(--shape-sm); }
+.table { width: 100%; border-collapse: collapse; font: var(--type-body-medium); }
+.table caption { text-align: left; padding: var(--space-3); font-weight: 600; }
+.table th, .table td { padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--color-outline-variant); white-space: nowrap; }
+.table thead th { background: var(--color-surface-container); font-weight: 600; }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.table .mono { font-family: var(--font-mono); }
+
+.tag { display: inline-block; padding: 0 var(--space-2); border-radius: var(--shape-xs); font: var(--type-label-large); background: var(--color-surface-container-high); }
+.tag-success { background: var(--color-success-container); color: var(--color-success); }
+.tag-error { background: var(--color-error-container); color: var(--color-error); }
+.tag-warning { background: var(--color-warning-container); color: var(--color-warning); }
+
+/* ---------- Etiquetas de estado (§10.3) e insignias ---------- */
+.tag-status { display: inline-flex; align-items: center; gap: 0.375rem; padding-left: 0.5rem; white-space: nowrap; }
+.tag-status::before { content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor; flex: none; }
+.tag-info { background: var(--color-primary-container); color: var(--color-primary); }
+.tag-unknown { background: transparent; border: 1px dashed var(--color-outline); }
+/* Forma además de color: transitorio = anillo; sin dato = hueco */
+.tag-status.tag-info::before { background: transparent; box-shadow: inset 0 0 0 2px currentColor; }
+.tag-status.tag-unknown::before { background: transparent; box-shadow: inset 0 0 0 1px currentColor; }
+.badge {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 1.25rem; height: 1.25rem; padding: 0 0.3rem;
+  border-radius: var(--shape-full); font: var(--type-label-medium); font-variant-numeric: tabular-nums;
+  background: var(--color-surface-container-high); color: var(--color-on-surface);
+}
+.badge-error { background: var(--color-error); color: var(--color-on-error); }
+.badge-warning { background: var(--color-warning-container); color: var(--color-warning); box-shadow: inset 0 0 0 1px var(--color-warning); }
+.dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-primary); flex: none; }
+
+/* ---------- Barra de herramientas ---------- */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.toolbar-end { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); }
+.toolbar .btn-text { --btn-fg: var(--color-on-surface-variant); }
+
+/* ---------- Contador de una secuencia (§10.9) y reproducción de una animación (§10.10) ---------- */
+/* El ancho del número más largo lo pone la aplicación en --seq-counter-width (p. ej. «Paso 23 de 23» → 13ch) */
+.seq-counter { display: inline-block; min-width: var(--seq-counter-width, 8ch); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.player { display: flex; flex-direction: column; gap: var(--space-2); }
+.player-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.player-timeline { display: block; width: 100%; min-height: 1.5rem; margin: 0; accent-color: var(--color-primary); }  /* 24 px: WCAG 2.5.8 */
+
+/* ---------- Árbol (§10.1; comportamiento en components.js) ---------- */
+.tree, .tree [role="group"] { list-style: none; margin: 0; padding: 0; }
+.tree { font: var(--type-body-medium); }
+.tree [role="treeitem"]:focus { outline: none; }  /* el foco se dibuja en la fila */
+.tree [role="treeitem"]:focus-visible > .tree-row { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+.tree-row {
+  display: flex; align-items: center; gap: var(--space-1); min-height: var(--row-height);
+  padding-block: 2px; padding-inline: calc(var(--space-1) + (var(--level, 1) - 1) * var(--tree-indent)) var(--space-2);
+  border-radius: var(--shape-xs); cursor: pointer; user-select: none;
+}
+.tree-row:hover { background: color-mix(in srgb, var(--color-on-surface) var(--state-hover), transparent); }
+.tree [aria-selected="true"] > .tree-row { background: var(--color-primary-container); box-shadow: inset 3px 0 0 var(--color-primary); }
+.tree [aria-expanded="false"] > [role="group"] { display: none; }
+.tree-toggle {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: var(--tree-indent); height: 1.5rem; border-radius: var(--shape-xs); color: var(--color-on-surface-variant);
+}
+.tree-toggle:not(:empty):hover { background: color-mix(in srgb, var(--color-on-surface) var(--state-press), transparent); }
+.tree-toggle svg { width: 1rem; height: 1rem; transition: transform var(--motion-short) var(--motion-easing); }
+.tree [aria-expanded="true"] > .tree-row > .tree-toggle svg { transform: rotate(90deg); }
+.tree-icon { width: 1.125rem; height: 1.125rem; flex: none; color: var(--color-on-surface-variant); }
+.tree-label { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree-empty { color: var(--color-on-surface-variant); }
+.tree-meta { display: inline-flex; align-items: center; gap: var(--space-1); flex: none; margin-left: auto; padding-left: var(--space-2); }
+.tree-action {
+  display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; padding: 0;
+  border: 0; border-radius: var(--shape-xs); background: transparent; color: var(--color-primary); cursor: pointer;
+}
+.tree-action:hover { background: color-mix(in srgb, var(--color-primary) var(--state-hover), transparent); }
+.tree-action svg { width: 1rem; height: 1rem; }
+/* Renombrar con F2 (D3-B): el campo sobre la etiqueta y, si no vale, el error bajo la fila */
+.tree-input {
+  flex: 1; min-width: 0; min-height: 1.75rem; padding: 0 var(--space-2); font: inherit;
+  color: var(--color-on-surface); background: var(--color-surface);
+  border: 1px solid var(--color-outline); border-radius: var(--shape-xs);
+}
+.tree-input[aria-invalid="true"] { border: 2px solid var(--color-error); }
+.tree-error {
+  margin: 0 0 var(--space-1); padding-inline-start: calc(var(--space-1) + var(--level, 1) * var(--tree-indent));
+  font: var(--type-body-medium); font-weight: 600; color: var(--color-error);
+}
+
+/* ---------- Maestro-detalle ---------- */
+.master-detail { display: grid; gap: var(--space-4); }
+@media (min-width: 840px) {
+  .master-detail { grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr); align-items: start; }
+  .master-detail .back-to-list { display: none; }
+}
+@media (max-width: 839px) {  /* un panel cada vez [M3 list-detail] */
+  .master-detail[data-view="list"] > .pane-detail, .master-detail[data-view="detail"] > .pane-list { display: none; }
+}
+.pane { position: relative; border: 1px solid var(--color-outline-variant); border-radius: var(--shape-md); padding: var(--space-2); min-width: 0; }
+.panel-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); margin-bottom: var(--space-4); }
+.panel-title { display: flex; align-items: center; gap: var(--space-2); margin: 0; min-width: 0; }
+.panel-title svg { width: 1.5rem; height: 1.5rem; flex: none; color: var(--color-on-surface-variant); }
+.panel-actions { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin-left: auto; }
+
+/* ---------- Pestañas (§10.2; comportamiento en components.js) ---------- */
+.tabs-bar { display: flex; align-items: center; min-width: 0; border-bottom: 1px solid var(--color-outline-variant); margin-bottom: var(--space-4); }
+/* position: relative en los contenedores con desplazamiento: el texto .visually-hidden de dentro no se sale */
+.tablist { position: relative; display: flex; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.tab {
+  flex: none; display: inline-flex; align-items: center; gap: var(--space-2);
+  min-height: var(--control-height); padding: 0 var(--space-4); margin: 0;
+  border: 0; border-radius: var(--shape-xs) var(--shape-xs) 0 0; background: none; cursor: pointer; white-space: nowrap;
+  font: var(--type-label-large); color: var(--color-on-surface-variant);
+}
+.tab:hover { background: color-mix(in srgb, var(--color-on-surface) var(--state-hover), transparent); color: var(--color-on-surface); }
+.tab[aria-selected="true"] { color: var(--color-primary); box-shadow: inset 0 -3px 0 var(--color-primary); }
+.tab:focus-visible { outline-offset: -2px; }
+.tab-count { font-variant-numeric: tabular-nums; }
+.tab > svg { width: 1.125rem; height: 1.125rem; flex: none; }
+[role="tabpanel"]:focus-visible { outline-offset: 4px; }
+/* Pestañas de documento: se cierran con la × o con Supr */
+.tab-doc { padding-inline: var(--space-3) var(--space-1); }
+.tab-doc .tab-name { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; }
+.tab-close {
+  display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem;
+  border-radius: var(--shape-xs); color: var(--color-on-surface-variant);
+}
+.tab-close:hover { background: color-mix(in srgb, var(--color-on-surface) var(--state-press), transparent); }
+.tab-close svg { width: 0.875rem; height: 0.875rem; }
+/* Cambios sin guardar (D10-A): un punto en lugar de la ×, que vuelve a ser × al pasar el puntero o con el foco */
+.tab-close .tab-dirty { display: none; }
+.tab-doc[data-dirty] .tab-close .tab-dirty { display: block; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor; }
+.tab-doc[data-dirty] .tab-close svg { display: none; }
+.tab-doc[data-dirty]:hover .tab-close .tab-dirty, .tab-doc[data-dirty]:focus-visible .tab-close .tab-dirty { display: none; }
+.tab-doc[data-dirty]:hover .tab-close svg, .tab-doc[data-dirty]:focus-visible .tab-close svg { display: block; }
+
+/* ---------- Salida en vivo (§10.4; comportamiento en components.js) ---------- */
+.output-wrap { position: relative; }
+.output {
+  height: 16rem; margin: 0; padding: var(--space-3); overflow: auto;
+  font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--color-surface-container-high); border: 2px solid transparent; border-radius: var(--shape-sm);
+}
+.output-new { font-weight: 700; }  /* lo recién llegado, unos segundos: con peso, sin movimiento */
+/* En pausa (D14-D): borde del color de aviso, y la etiqueta con la hora y las líneas nuevas */
+.output-wrap[data-paused] > .output { border-color: var(--color-warning); }
+.output-paused { position: absolute; top: var(--space-2); right: var(--space-5); }
+.output-end { position: absolute; bottom: var(--space-3); right: var(--space-5); }
+
+/* ---------- Texto con formato (§6.9) ---------- */
+.markdown { font: var(--type-body-medium); overflow-wrap: anywhere; }
+.markdown-large { font: var(--type-body-large); }
+.markdown > :first-child { margin-top: 0; }
+.markdown > :last-child { margin-bottom: 0; }
+.markdown :is(h1, h2, h3, h4, h5, h6) { margin: var(--space-5) 0 var(--space-2); text-wrap: balance; }
+/* Por su profundidad en el texto, no por su nivel en la página: el «#» del texto puede ser un h4 y el «##», un h5 */
+.markdown .markdown-heading-1 { font: var(--type-body-large); font-weight: 600; }
+.markdown .markdown-heading-2 { font: var(--type-label-large); font-weight: 600; }
+.markdown .markdown-heading-3 { font: var(--type-label-large); color: var(--color-on-surface-variant); }
+.markdown-large .markdown-heading-1 { font: var(--type-title-large); }
+.markdown-large .markdown-heading-2 { font: var(--type-body-large); font-weight: 600; }
+.markdown-large .markdown-heading-3 { font: var(--type-body-large); font-weight: 500; color: var(--color-on-surface-variant); }
+.markdown :is(p, ul, ol, blockquote, pre, .table-wrap) { max-width: none; margin: 0 0 var(--space-3); }
+.markdown :is(ul, ol) { padding-left: var(--space-5); }
+.markdown li + li { margin-top: var(--space-1); }
+.markdown pre { padding: var(--space-3); overflow-x: auto; line-height: 1.35; background: var(--color-surface-container-high); border-radius: var(--shape-sm); }
+.markdown pre code { padding: 0; background: none; font-size: 0.8125rem; }
+.markdown blockquote { padding-left: var(--space-3); border-left: 1px solid var(--color-outline); color: var(--color-on-surface-variant); }
+/* En una ficha, su principio, que se desvanece al final si sigue (la máscara solo usa la opacidad del color) */
+.markdown-clip { max-height: 9.5rem; overflow: hidden; mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5rem), transparent); }
+/* Diálogo de lectura: casi toda la pantalla, y el texto en una columna de 80 caracteres como máximo (§4.3) */
+dialog.dialog-reading { width: min(72rem, calc(100vw - 2rem)); height: calc(100vh - 2rem); max-width: none; max-height: none; }
+@media (max-width: 599px) { dialog.dialog-reading { width: 100vw; height: 100vh; margin: 0; border-radius: 0; } }
+.reading { max-width: 64ch; margin-inline: auto; }
+
+/* ---------- Elementos de lista con acciones (§6.8) ---------- */
+.item-list { margin: 0; padding: 0; list-style: none; }
+.item { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); padding-block: var(--space-3); border-bottom: 1px solid var(--color-outline-variant); }
+.item:last-child { border-bottom: 0; }
+.item-main { flex: 1 1 16rem; min-width: 0; }
+.item-main > * { margin: 0; }
+.item-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+/* La acción principal de un elemento es su nombre: un botón con aspecto de enlace */
+.button-link {
+  padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+  font: var(--type-label-large); font-size: 1rem; color: var(--color-primary); text-decoration: underline; text-underline-offset: 0.15em;
+}
+.button-link:hover { text-decoration-thickness: 2px; }
+
+/* ---------- Menú y descripción emergente ---------- */
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute; z-index: 50; top: 100%; left: 0; min-width: 14rem; margin: var(--space-1) 0 0; padding: var(--space-1) 0;
+  list-style: none; border-radius: var(--shape-xs); background: var(--color-surface-container); box-shadow: var(--elevation-3);
+}
+.menu [role="menuitem"] {
+  display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--control-height-sm);
+  padding: 0 var(--space-4); border: 0; background: none; font: var(--type-body-medium); color: var(--color-on-surface);
+  text-align: left; cursor: pointer;
+}
+.menu [role="menuitem"]:hover, .menu [role="menuitem"]:focus-visible { background: color-mix(in srgb, var(--color-on-surface) var(--state-hover), transparent); outline-offset: -2px; }
+/* Con el atributo popover el menú sube a la capa superior y ningún overflow lo recorta (§6.5); components.js lo coloca */
+.menu[popover] { position: fixed; inset: auto; margin: 0; border: 0; color: inherit; overflow: visible; }
+.menu [role="menuitem"] svg { width: 1.125rem; height: 1.125rem; color: var(--color-on-surface-variant); }
+.tooltip {
+  position: fixed; z-index: 200; max-width: 20rem; padding: var(--space-1) var(--space-2);
+  border-radius: var(--shape-xs); background: var(--color-on-surface); color: var(--color-surface);
+  font: var(--type-body-medium); box-shadow: var(--elevation-3);
+}
+
+/* ---------- Estados ---------- */
+.state { padding: var(--space-6) var(--space-4); text-align: center; border: 1px dashed var(--color-outline); border-radius: var(--shape-sm); }
+.state p { margin-inline: auto; }
+.progress-circular {
+  display: inline-block; width: 1.5rem; height: 1.5rem; border-radius: 50%; vertical-align: middle;
+  border: 3px solid var(--color-surface-container-high); border-top-color: var(--color-primary);
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+/* Esqueleto: la forma del contenido mientras carga (§6.2). Estático: sin brillo que recorre */
+.skeleton { display: block; height: 0.75rem; margin-block: var(--space-2); border-radius: var(--shape-xs); background: var(--color-surface-container-high); }
+.skeleton-title { height: 1.25rem; width: 40%; }
+.skeleton-short { width: 60%; }
+
+/* ---------- Diálogo y aviso emergente ---------- */
+dialog {
+  max-width: min(32rem, calc(100vw - 2rem)); padding: var(--space-5);
+  border: 0; border-radius: var(--shape-md);
+  background: var(--color-surface-container); color: var(--color-on-surface); box-shadow: var(--elevation-3);
+}
+dialog::backdrop { background: var(--color-scrim); }
+dialog.dialog-wide { width: min(40rem, calc(100vw - 2rem)); max-width: none; }
+.dialog-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
+.dialog-header > :first-child { margin: 0; }
+.dialog-section + .dialog-section { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-outline-variant); }
+/* Avisos emergentes (§9.2): abajo a la derecha, apilados, el más reciente abajo. Dos regiones vivas
+   siempre presentes, role="alert" (error, advertencia) y role="status" (información, éxito); vacías no
+   ocupan nada ni tapan clics. Fondo claro, franja izquierda e icono del color de la gravedad, cierre. */
+.toasts {
+  position: fixed; z-index: 150; right: var(--space-4); bottom: var(--space-4); left: var(--space-4);
+  display: flex; flex-direction: column; align-items: flex-end; pointer-events: none;
+}
+@media (min-width: 600px) { .toasts { left: auto; } }
+body:has(> .status-bar) .toasts { bottom: var(--space-7); }  /* encima de la barra de estado (§6.1) */
+.toasts > div { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); width: 100%; }
+.toasts > div:not(:empty) ~ div:not(:empty) { margin-top: var(--space-2); }
+.toast {
+  --toast-accent: var(--color-primary);
+  display: flex; align-items: flex-start; gap: var(--space-3); width: min(24rem, 100%);
+  padding: var(--space-2) var(--space-1) var(--space-2) var(--space-3); pointer-events: auto;
+  border-left: 4px solid var(--toast-accent); border-radius: var(--shape-sm);
+  background: var(--color-surface); color: var(--color-on-surface); box-shadow: var(--elevation-3);
+  font: var(--type-body-medium);
+}
+.toast > svg { width: 1.25rem; height: 1.25rem; flex: none; margin-top: var(--space-2); fill: var(--toast-accent); }
+.toast-body { flex: 1; min-width: 0; padding-block: var(--space-2); overflow-wrap: anywhere; }
+.toast-body p { margin: 0; max-width: none; }
+.toast-title { font-weight: 600; }
+.toast > .btn { flex: none; }
+.toast-success { --toast-accent: var(--color-success); }
+.toast-warning { --toast-accent: var(--color-warning); }
+.toast-error { --toast-accent: var(--color-error); }
+
+/* ---------- Movimiento reducido (§6.4) ----------
+   Se quita el movimiento en el espacio; se mantienen los cambios de color y opacidad que comunican estado,
+   y el indicador de progreso gira más despacio. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-iteration-count: 1; }
+  .progress-circular { animation-duration: 2.4s; animation-iteration-count: infinite; }
+  .tree-toggle svg, .switch::before { transition: none; }
+}

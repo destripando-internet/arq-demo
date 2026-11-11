@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>arq-demo tests</title>
+  <link rel="icon" href="data:,">
   <!-- The tests import node:test and node:assert/strict; replace them here. -->
   <script type="importmap">
     {
@@ -13,22 +14,28 @@
       }
     }
   </script>
+  <meta name="color-scheme" content="light dark">
+  <script src="../style-guide/theme.js"></script>
+  <link rel="stylesheet" href="../style-guide/tokens.css">
   <link rel="stylesheet" href="../style.css">
   <style>
     #results { list-style: none; padding: 0; }
     #results li { padding: 2px 0; }
-    .fail { color: var(--bad); }
-    #results .error { margin: 2px 0 0 1.5em; color: var(--muted); font-size: 0.85rem; white-space: pre-wrap; }
+    main { padding-block: var(--space-4); }
+    .fail { color: var(--color-error); }
+    #results .error { margin: 2px 0 0 1.5em; color: var(--color-on-surface-variant); font: var(--type-body-medium); white-space: pre-wrap; }
     #summary { font-weight: 700; }
   </style>
 </head>
 <body>
+  <main class="container">
   <header>
     <h1>Tests</h1>
     <p class="hint">The same files that <code>node --test</code> runs. <a href="../">Back to the demo</a></p>
   </header>
   <p id="summary">Running…</p>
   <ul id="results"></ul>
+  </main>
 
   <script type="module">
     import { run } from './runner.js';

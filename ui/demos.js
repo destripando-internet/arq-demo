@@ -32,8 +32,8 @@ export const DEMOS = [
     id: 'T1', query: 'p=saw&n=3&tt=1&d=1&to=5',
     title: { en: 'How to read the diagram', es: 'Cómo leer el diagrama' },
     text: {
-      en: 'Stop-and-wait with a = 1 and three messages, none lost. Time runs downwards, with the sender on the left and the receiver on the right. Each «data» arrow is a message and each «ack» arrow comes back to confirm it; the sender waits for it before sending the next one. Press ▶ to play it, or ⏭ to see the end. Then click an arrow to «lose» that message: its timer expires and the sender retransmits it. The Guide tab explains every symbol.',
-      es: 'Parada y espera con a = 1 y tres mensajes, sin pérdidas. El tiempo avanza hacia abajo, con el emisor a la izquierda y el receptor a la derecha. Cada flecha «data» es un mensaje y cada flecha «ack» vuelve para confirmarlo; el emisor la espera antes de enviar el siguiente. Pulsa ▶ para reproducirlo, o ⏭ para ver el final. Después haz clic en una flecha para «perder» ese mensaje: su temporizador expira y el emisor lo retransmite. La pestaña Guía explica cada símbolo.',
+      en: 'Stop-and-wait with a = 1 and three messages, none lost. Time runs downwards, with the sender on the left and the receiver on the right. Each «data» arrow is a message and each «ack» arrow comes back to confirm it; the sender waits for it before sending the next one. Press «Play» to play it, or «End» to see the end. Then click an arrow to «lose» that message: its timer expires and the sender retransmits it. The Help explains every symbol.',
+      es: 'Parada y espera con a = 1 y tres mensajes, sin pérdidas. El tiempo avanza hacia abajo, con el emisor a la izquierda y el receptor a la derecha. Cada flecha «data» es un mensaje y cada flecha «ack» vuelve para confirmarlo; el emisor la espera antes de enviar el siguiente. Pulsa «Reproducir» para reproducirlo, o «Fin» para ver el final. Después haz clic en una flecha para «perder» ese mensaje: su temporizador expira y el emisor lo retransmite. La Ayuda explica cada símbolo.',
     },
   },
   {

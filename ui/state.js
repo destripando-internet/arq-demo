@@ -2,6 +2,7 @@
 // constraints and the channel utilisation.
 
 import { t } from './i18n.js';
+import { icon } from './icons.js';
 
 export function renderState(trace, an) {
   return `
@@ -10,7 +11,7 @@ export function renderState(trace, an) {
       <section>
         <h2>${t('constraints')}</h2>
         <ul class="checks">${checks(an).map(([level, html]) =>
-          `<li class="${level}"><span class="icon">${ICON[level]}</span><span>${html}</span></li>`).join('')}</ul>
+          `<li class="${level}">${icon(ICON[level])}<span>${html}</span></li>`).join('')}</ul>
       </section>
       <section>
         <h2>${t('utilisation')}</h2>
@@ -19,14 +20,16 @@ export function renderState(trace, an) {
     </div>`;
 }
 
-const ICON = { ok: '✓', warn: '⚠', error: '✗' };
+// The level is said by the text of each constraint too («Incorrect…»).
+const ICON = { ok: 'check-circle', warn: 'warning', error: 'error' };
 
+// What makes the protocol fail, as an error alert that stays while it holds.
 function alerts(an, M) {
   const out = [];
   if (an.failure) out.push(t('alert.failure', { t: num(an.failure.t) }));
   if (an.loop) out.push(t('alert.loop', { t: num(an.loop.t), seq: an.loop.abs % M }));
   if (an.unfinished) out.push(t('alert.unfinished', { t: num(an.tMax) }));
-  return out.map(text => `<p class="fail-banner"><span class="icon">✗</span> ${text}</p>`).join('');
+  return out.map(text => `<div class="alert alert-error">${icon('error')}<div class="alert-body"><p>${text}</p></div></div>`).join('');
 }
 
 // [level, html] for each constraint of the chapter.
@@ -45,7 +48,7 @@ function checks(an) {
 }
 
 function metrics(an, { count, tTrans }) {
-  const measured = an.uMeasured === null ? '—'
+  const measured = an.uMeasured === null ? `<span aria-hidden="true">—</span><span class="visually-hidden">${t('no.data')}</span>`
     : `${count}·${num(tTrans)} / ${num(an.duration)} = ${num(an.uMeasured)} (${pct(an.uMeasured)})`;
   return `
     <dl class="metrics">
