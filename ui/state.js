@@ -51,7 +51,7 @@ function metrics(an, { count, tTrans }) {
     <dl class="metrics">
       <dt>${t('u.theory')}</dt><dd>${num(an.uTheory)} (${pct(an.uTheory)})</dd>
       <dt>${t('u.measured')}</dt><dd>${measured}</dd>
-      <dt>${t('retransmissions')}</dt><dd>${an.retransmissions}</dd>
+      <dt>${t('retransmissions')}</dt><dd>${an.retransmissions}${an.spurious ? ` (${t('spurious.count', { n: an.spurious })})` : ''}</dd>
     </dl>
     <p class="hint">${t('u.hint')}</p>`;
 }

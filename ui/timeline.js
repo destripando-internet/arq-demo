@@ -104,7 +104,7 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
   const marker = kind => `<marker id="ah-${kind}" viewBox="0 0 10 10" refX="10" refY="5"
       markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto">
       <path class="ah-${kind}" d="M0,1.5L10,5L0,8.5z"/></marker>`;
-  out.push(`<defs>${marker('data')}${marker('ack')}${marker('idle')}
+  out.push(`<defs>${marker('data')}${marker('ack')}${marker('idle')}${marker('idle-data')}
     <clipPath id="past"><rect x="0" y="0" width="${WIDTH}" height="${y(now)}"/></clipPath></defs>`);
 
   // The names of the sides, upright at the outer edges, from the top of the
@@ -200,7 +200,10 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
   for (const d of data) {
     if (d.tx.tDep > now) continue;
     const timeout = d.timeout ? `<tspan class="note">${t('timeout!')} </tspan>` : '';
-    out.push(`<text class="label" x="${labelX}" y="${y(d.tx.tDep) + 5}" text-anchor="end">${timeout}${d.text}</text>`);
+    // A spurious retransmission, in grey as an ACK with no effect, with what it means.
+    const spurious = d.tx.spurious ? `<title>${t('spurious.title')}</title>` : '';
+    out.push(`<text class="label${spurious ? ' idle' : ''}" x="${labelX}" y="${y(d.tx.tDep) + 5}" `
+      + `text-anchor="end">${spurious}${timeout}${d.text}</text>`);
   }
   if (protocol.showBuffer)
     rows.forEach((r, i) => {
@@ -242,9 +245,11 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
     const [xe, ye] = at(f);
     const [xh, yh] = at(limit);
     const arrived = tx.lost && f >= limit;
-    // An ACK with no effect on the sender: dashed, with a hollow head.
-    const head = tx.noEffect ? 'idle' : tx.kind;
-    out.push(`<g class="msg ${tx.kind}${tx.lost ? ' lost' : ''}${tx.noEffect ? ' idle' : ''}" data-key="${tx.key}">`,
+    // A message that served no purpose, dashed with a hollow head: an ACK with
+    // no effect on the sender, or a spurious retransmission.
+    const idle = tx.noEffect || tx.spurious;
+    const head = !idle ? tx.kind : tx.kind === 'ack' ? 'idle' : 'idle-data';
+    out.push(`<g class="msg ${tx.kind}${tx.lost ? ' lost' : ''}${idle ? ' idle' : ''}" data-key="${tx.key}">`,
       `<line class="hit" x1="${x1}" y1="${y1}" x2="${xh}" y2="${yh}"/>`,
       `<line class="line" x1="${x1}" y1="${y1}" x2="${xe}" y2="${ye}"${arrived ? '' : ` marker-end="url(#ah-${head})"`}/>`,
       arrived ? `<rect class="drop" x="${xh - 5}" y="${yh - 5}" width="10" height="10"/>` : '',

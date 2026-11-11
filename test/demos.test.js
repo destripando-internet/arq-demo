@@ -14,6 +14,7 @@ const run = (id, extra = {}) => {
 };
 const rtx = trace => trace.transmissions.filter(tx => tx.rtx).map(tx => tx.abs);
 const idle = trace => trace.transmissions.filter(tx => tx.noEffect).length;
+const spurious = trace => trace.transmissions.filter(tx => tx.spurious).map(tx => tx.key);
 
 test('demos: unique ids, a known protocol and texts in both languages', () => {
   assert.equal(new Set(DEMOS.map(d => d.id)).size, DEMOS.length);
@@ -77,4 +78,20 @@ test('demos: what the texts say about bandwidth × delay', () => {
   assert.ok(run('B7').an.uTheory > 0.99);
   assert.ok(Math.abs(run('B8').an.uTheory - 1 / 626) < 1e-9);
   assert.ok(Math.abs(run('B9').an.uTheory - 31 / 626) < 1e-9);
+});
+
+test('demos: spurious retransmissions, those an earlier copy made unneeded', () => {
+  // Premature timer: every retransmission (the originals arrive later).
+  const s2 = run('S2').trace;
+  assert.ok(rtx(s2).length > 0);
+  assert.deepEqual(spurious(s2), s2.transmissions.filter(tx => tx.rtx).map(tx => tx.key));
+  // Lost message, then a lost ACK: only the retransmission after the lost ACK.
+  assert.deepEqual(spurious(run('S1').trace), ['d2.2']);
+  // Go-back-N: 1 was lost and 2 and 3 discarded, so none was spurious.
+  assert.deepEqual(spurious(run('G1').trace), []);
+  // Selective repeat, a lost ACK: the retransmission of 1.
+  assert.deepEqual(spurious(run('R3').trace), ['d1.2']);
+  // Cumulative ACKs: 3 had arrived, its timer expired anyway.
+  assert.deepEqual(spurious(run('C1').trace), ['d3.2']);
+  assert.equal(run('C1').an.spurious, 1);
 });

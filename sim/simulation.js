@@ -138,13 +138,19 @@ export function simulate(protocol, opts = {}) {
         key, kind: 'data', seq: abs % M, abs, rtx: attempt > 1,
         tDep, tArr: instant(tDep + p.tTrans + p.tProp),
         lost: isLost(key), forced: forced.has(key),
-        sender: null,  // sender state when it leaves
+        sender: null,     // sender state when it leaves
+        received: false,  // it reached the receiver, which did not discard it
+        spurious: false,  // a retransmission that was not needed (see below)
       };
       trace.transmissions.push(tx);
       // Taken when it leaves, after any ACK arriving at that same instant.
       tx.sender = senderNow();
       engine.schedule(tDep, () => { tx.sender = senderNow(); }, LINK);
-      arrive(tx, () => receiver.onData({ seq: tx.seq, abs }));
+      arrive(tx, () => {
+        const notes = trace.notes.length;
+        receiver.onData({ seq: tx.seq, abs });
+        tx.received = !trace.notes.slice(notes).some(n => n.text === 'discarded');
+      });
       return tDep;
     },
 
@@ -225,6 +231,16 @@ export function simulate(protocol, opts = {}) {
   sender.start();
   snap();
   engine.run(p.tMax);
+
+  // A retransmission is spurious when an earlier copy of the message reached
+  // the receiver and was not discarded, even if it arrived after this one
+  // left (a premature timer): a lost ACK, or a timer too short.
+  const received = new Set();
+  for (const tx of trace.transmissions)
+    if (tx.kind === 'data') {
+      tx.spurious = tx.rtx && received.has(tx.abs);
+      if (tx.received) received.add(tx.abs);
+    }
 
   trace.end = Math.max(
     0, trace.done ?? 0,

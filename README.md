@@ -22,7 +22,8 @@ from one of the [demos](#demos).
   go-back-N. A banner warns when the receiver delivers a duplicate as a new
   message or the sender would retransmit forever.
 - The theoretical and measured utilisation and the number of
-  retransmissions.
+  retransmissions. Spurious ones, not needed because an earlier copy had
+  already reached the receiver, are dashed, like ACKs with no effect.
 - Link presets: the book's figures (a = 1), a 100 m LAN, 1000 km of fibre
   and a geostationary satellite (times in ms). Long waits are drawn
   compressed.

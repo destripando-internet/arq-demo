@@ -9,6 +9,7 @@
 // - Theoretical utilisation: U = min(1, Ws / (1 + 2a)), without errors
 // - Measured utilisation:    N·Ttrans / duration of the transfer
 //                            (until the sender has everything confirmed)
+// - Retransmissions, and how many of them were spurious (not needed)
 
 export function analyze(trace, protocol) {
   const { k, M, window: Ws, count, tTrans, tProp, timeout, ack } = trace.params;
@@ -31,6 +32,7 @@ export function analyze(trace, protocol) {
     uMeasured: trace.done ? count * tTrans / trace.done : null,
     duration: trace.done,
     retransmissions: data.filter(tx => tx.rtx).length,
+    spurious: data.filter(tx => tx.spurious).length,
     failure: failure ? { t: failure.t } : null,
     loop: trace.loop,
     unfinished: trace.done === null && !trace.loop,

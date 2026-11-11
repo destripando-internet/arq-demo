@@ -9,7 +9,7 @@ import { cellStyle, frameStyle } from './tape.js';
 const icon = (w, h, body) =>
   `<svg class="legend-icon" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${body}</svg>`;
 
-const markers = `<svg width="0" height="0" class="legend-defs"><defs>${['data', 'ack', 'idle'].map(kind =>
+const markers = `<svg width="0" height="0" class="legend-defs"><defs>${['data', 'ack', 'idle', 'idle-data'].map(kind =>
   `<marker id="lg-${kind}" viewBox="0 0 10 10" refX="10" refY="5" markerUnits="userSpaceOnUse"
      markerWidth="10" markerHeight="10" orient="auto"><path class="ah-${kind}" d="M0,1.5L10,5L0,8.5z"/></marker>`).join('')}
   </defs></svg>`;
@@ -19,7 +19,7 @@ function arrow(kind, lost = false, idle = false) {
   const [xm, ym] = [(x1 + x2) / 2, (y1 + y2) / 2];
   const end = lost
     ? `<line class="line" x1="${x1}" y1="${y1}" x2="${xm}" y2="${ym}"/><rect class="drop" x="${xm - 5}" y="${ym - 5}" width="10" height="10"/>`
-    : `<line class="line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#lg-${idle ? 'idle' : kind})"/>`;
+    : `<line class="line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#lg-${!idle ? kind : kind === 'ack' ? 'idle' : 'idle-data'})"/>`;
   return icon(76, 26, `<g class="msg ${kind}${idle ? ' idle' : ''}">${end}</g>`);
 }
 
@@ -51,6 +51,7 @@ const notes = () => ['discarded', 'duplicate', 'buffered', 'accepted']
 export function renderGuide() {
   const legend = [
     [arrow('data'), 'legend.data'],
+    [arrow('data', false, true), 'legend.spurious'],
     [arrow('ack'), 'legend.ack'],
     [arrow('ack', false, true), 'legend.idle'],
     [arrow('data', true), 'legend.lost'],
