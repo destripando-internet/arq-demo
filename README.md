@@ -119,6 +119,10 @@ browser; `make devel PORT=8000` changes the port. If another app has the
 port, it serves on the next free one (8766…); the address is on the first
 line it prints. A demo is then at <http://localhost:8765/?demo=G1>.
 
+`make devel` (`tools/devel.py`) follows the pattern *Servidor de
+desarrollo: `make devel` idempotente* of `web-app-patterns`
+(`DEVEL_SERVER.md`).
+
 ## Tests
 
 In the browser: <http://localhost:8765/test-web/>, or the published copy at
