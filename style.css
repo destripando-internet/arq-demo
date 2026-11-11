@@ -4,8 +4,8 @@
   --fg: #1d1d1b;
   --muted: #6b6b66;
   --line: #1d1d1b;
-  --ack: #2f5f9e;
-  --ack-idle: #8fa9c9;  /* ACK with no effect on the sender */
+  --ack: #2b7bd9;
+  --ack-idle: #93b8e6;  /* ACK with no effect on the sender */
   --data-idle: #9a9a95; /* spurious retransmission */
   --sent: #ffd9d9;     /* send buffer: sent, not confirmed */
   --unsent: #d2eebe;   /* send buffer: not sent yet */
@@ -191,10 +191,12 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .axis-break rect { fill: var(--bg); stroke: none; }
 .axis-break path { stroke: var(--line); stroke-width: 1.5; fill: none; }
 #timeline .gap { fill: var(--muted); font-size: 12px; font-style: italic; paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
-.msg .line { stroke: var(--line); stroke-width: 1.5; }
-.msg.ack .line { stroke: var(--ack); }
+/* Data and ACKs differ in colour and width: data carry the payload. */
+.msg .line { stroke: var(--line); stroke-width: 2.4; }
+.msg.ack .line { stroke: var(--ack); stroke-width: 1.1; }
 .msg .hit { stroke: transparent; stroke-width: 14; }
-.msg:hover .line { stroke-width: 3; }
+.msg:hover .line { stroke-width: 3.4; }
+.msg.ack:hover .line { stroke-width: 2.2; }
 .msg .drop { fill: var(--line); }
 .msg.ack .drop { fill: var(--ack); }
 .ah-data { fill: var(--line); }
@@ -206,6 +208,7 @@ output { min-width: 2.5em; font-variant-numeric: tabular-nums; color: var(--mute
 .msg.data.idle .drop { fill: var(--data-idle); }
 .ah-idle-data { fill: var(--bg); stroke: var(--data-idle); stroke-width: 1.3; }
 #timeline .label.idle { fill: var(--muted); }
+#timeline .ack-label.idle { fill: var(--ack-idle); }
 #timeline .label.idle .note { fill: var(--fg); }  /* «timeout!» keeps its colour */
 
 .timer-line { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; }

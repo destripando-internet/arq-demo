@@ -218,7 +218,7 @@ export function renderTimeline(trace, now, protocol, fitWidth = 0) {
   for (const tx of acks) {
     if (tx.tDep > now) continue;
     const cy = y(tx.tDep) + ackGap(tx);
-    out.push(`<text class="label${tx.noEffect ? ' idle' : ''}" x="${ackX}" y="${cy + 5}">ack ${tx.seq}</text>`);
+    out.push(`<text class="label ack-label${tx.noEffect ? ' idle' : ''}" x="${ackX}" y="${cy + 5}">ack ${tx.seq}</text>`);
     if (protocol.showReceiverBuffer)
       out.push(bufRow(recvKeys(tx), receiverRow(recvRowX, cy - 9, tx.receiver, trace.params)));
     const note = noteAt.get(tx.tDep);
