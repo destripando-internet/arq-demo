@@ -120,9 +120,10 @@ do not load from `file://`, so any static server will do:
 
     make devel
 
-(`python3 -m http.server` on 127.0.0.1, telling the browser not to cache
-the files, so it always runs the edited ones; `make devel PORT=8000`
-changes the port) and open <http://localhost:8765>. A demo is then at
+It serves the repository on <http://localhost:8765>, telling the browser
+not to cache the files, so it always runs the edited ones, and opens it in
+the default browser. Run it again while it is serving and it only opens the
+browser; `make devel PORT=8000` changes the port. A demo is then at
 <http://localhost:8765/?demo=G1>.
 
 ## Tests
