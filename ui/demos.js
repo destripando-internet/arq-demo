@@ -85,14 +85,6 @@ export const DEMOS = [
     },
   },
   {
-    id: 'G4', query: 'p=gbn&k=2&w=3&n=4&tt=1&d=1&to=6&l=a1,a2,a3',
-    title: { en: 'Largest window: no ambiguity', es: 'Ventana máxima: sin ambigüedad' },
-    text: {
-      en: 'Ws = 3 = 2^k − 1 and the first three ACKs are lost, so the sender retransmits 0, 1 and 2. The receiver, which expects 3, correctly recognises the retransmissions as duplicates: with this window none of them can have the number of the next message it expects. It discards them and answers ack 3, which confirms everything.',
-      es: 'Ws = 3 = 2^k − 1 y se pierden las tres primeras confirmaciones, así que el emisor retransmite el 0, el 1 y el 2. El receptor, que espera el 3, reconoce correctamente las retransmisiones como duplicados: con esta ventana ninguna puede tener el número del siguiente mensaje que espera. Las descarta y responde ack 3, que lo confirma todo.',
-    },
-  },
-  {
     id: 'G6', query: 'p=gbn&k=2&w=4&n=5&tt=1&d=1&to=6&l=a1,a2,a3,a4',
     title: { en: 'Go-back-N: window too large', es: 'Repetición continua: ventana demasiado grande' },
     text: {
@@ -114,22 +106,6 @@ export const DEMOS = [
     text: {
       en: 'The ACK of message 1 is lost. Its timer expires and the sender retransmits it; the receiver had already delivered it, marks it as a duplicate and confirms it again. Without that new ACK, the sender would retransmit it forever.',
       es: 'Se pierde la confirmación del mensaje 1. Expira su temporizador y el emisor lo retransmite; el receptor ya lo había entregado, lo marca como duplicado y lo confirma de nuevo. Sin esa nueva confirmación, el emisor lo retransmitiría sin fin.',
-    },
-  },
-  {
-    id: 'R4', query: 'p=sr&k=3&w=4&n=6&tt=1&d=1&to=7&ack=cumulative&l=a2',
-    title: { en: 'Selective repeat: a lost cumulative ACK', es: 'Repetición selectiva: un ACK acumulativo perdido' },
-    text: {
-      en: 'The ACK of message 1 is lost, but ACKs are cumulative: the next one, ack 3, also confirms 1, so nothing is retransmitted.',
-      es: 'Se pierde la confirmación del mensaje 1, pero la confirmación es acumulativa: la siguiente, ack 3, también confirma el 1, así que no hay ninguna retransmisión.',
-    },
-  },
-  {
-    id: 'R5', query: 'p=sr&k=3&w=4&n=8&tt=1&d=1&to=7&ack=individual&l=a1,a2,a3,a4',
-    title: { en: 'Selective repeat: largest window', es: 'Repetición selectiva: ventana máxima' },
-    text: {
-      en: 'W = 2^(k−1) = 4 and the first four ACKs are lost. The retransmissions fall outside the new receive window, so the receiver recognises them as duplicates and confirms them.',
-      es: 'W = 2^(k−1) = 4 y se pierden las cuatro primeras confirmaciones. Las retransmisiones caen fuera de la nueva ventana de recepción, así que el receptor las reconoce como duplicados y las confirma.',
     },
   },
   {
@@ -162,46 +138,6 @@ export const DEMOS = [
     text: {
       en: 'a = 2 and Ws = 3 < 1 + 2a = 5: the sender sends its window and waits for the first ACK. There are gaps between the bands: theoretical U = 3/5 = 0.6.',
       es: 'a = 2 y Ws = 3 < 1 + 2a = 5: el emisor envía su ventana y espera a la primera confirmación. Entre las franjas hay huecos: U teórico = 3/5 = 0.6.',
-    },
-  },
-  {
-    id: 'B3', query: 'p=gbn&k=5&w=26&n=40&tt=0.4&d=5&to=15',
-    title: { en: 'Message size does not change the bandwidth × delay product', es: 'El tamaño del mensaje no cambia el producto ancho de banda × retardo' },
-    text: {
-      en: 'Fibre, 1000 km, at R = 10 Mb/s with 500-byte messages (times in ms): t<sub>trans</sub> = 0.4 and t<sub>prop</sub> = 5, so a = 12.5 and the window must hold 1 + 2a = 26 messages; with Ws = 26 the channel is full. With 1000-byte messages, a would be 6.25 and 14 messages would do. The data in flight is the same: BDP = R · 2·t<sub>prop</sub> = 100 kbit = 12.5 KB, that is 25 messages of 500 bytes or 12.5 of 1000. It depends on the rate and the delay, not on the message size.',
-      es: 'Fibra de 1000 km a R = 10 Mb/s con mensajes de 500 bytes (tiempos en ms): t<sub>trans</sub> = 0.4 y t<sub>prop</sub> = 5, así que a = 12.5 y en la ventana deben caber 1 + 2a = 26 mensajes; con Ws = 26 el canal se llena. Con mensajes de 1000 bytes, a sería 6.25 y bastarían 14. Los datos en vuelo son los mismos: BDP = R · 2·t<sub>prop</sub> = 100 kbit = 12.5 KB, es decir, 25 mensajes de 500 bytes o 12.5 de 1000. Depende de la velocidad y del retardo, no del tamaño del mensaje.',
-    },
-  },
-  {
-    id: 'B4', query: 'p=gbn&k=4&w=14&n=30&tt=0.8&d=5&to=15',
-    title: { en: 'Fibre link, go-back-N', es: 'Enlace de fibra, repetición continua' },
-    text: {
-      en: 'Fibre, 1000 km (times in ms): a = 6.25 and 1 + 2a = 13.5. With k = 4, go-back-N allows Ws = 14 ≤ 15 and the channel is fully used.',
-      es: 'Fibra de 1000 km (tiempos en ms): a = 6.25 y 1 + 2a = 13.5. Con k = 4, repetición continua admite Ws = 14 ≤ 15 y el canal se aprovecha por completo.',
-    },
-  },
-  {
-    id: 'B5', query: 'p=sr&k=4&w=14&n=30&tt=0.8&d=5&to=15&ack=individual&l=a1',
-    title: { en: 'Fibre link, selective repeat with k = 4', es: 'Enlace de fibra, repetición selectiva con k = 4' },
-    text: {
-      en: 'Fibre, 1000 km (times in ms), selective repeat with k = 4 and Ws = 14: the largest window is 2^(k−1) = 8, so Ws = 14 is not valid. Losing the first ACK is enough for the retransmission of 0 to be delivered as a new message.',
-      es: 'Fibra de 1000 km (tiempos en ms), repetición selectiva con k = 4 y Ws = 14: la ventana máxima es 2^(k−1) = 8, así que Ws = 14 no es válida. Basta con perder la primera confirmación para que la retransmisión del 0 se entregue como un mensaje nuevo.',
-    },
-  },
-  {
-    id: 'B6', query: 'p=sr&k=5&w=14&n=30&tt=0.8&d=5&to=15&ack=individual&l=a1',
-    title: { en: 'Fibre link, selective repeat with k = 5', es: 'Enlace de fibra, repetición selectiva con k = 5' },
-    text: {
-      en: 'Fibre, 1000 km (times in ms), selective repeat with k = 5 and Ws = 14 ≤ 2^(k−1) = 16: the window is valid. The first ACK is lost and 0 is retransmitted; the receiver correctly recognises the retransmission as a duplicate. For the same window, selective repeat needs one more bit than go-back-N.',
-      es: 'Fibra de 1000 km (tiempos en ms), repetición selectiva con k = 5 y Ws = 14 ≤ 2^(k−1) = 16: la ventana es válida. Se pierde la primera confirmación y el 0 se retransmite; el receptor reconoce correctamente la retransmisión como duplicado. Para la misma ventana, repetición selectiva necesita un bit más que repetición continua.',
-    },
-  },
-  {
-    id: 'B7', query: 'p=saw&n=6&tt=0.8&d=0.0005&to=1',
-    title: { en: 'LAN, stop-and-wait', es: 'LAN, parada y espera' },
-    text: {
-      en: 'A 100 m LAN: a ≈ 0.0006, so U = 1 / (1 + 2a) ≈ 1. On a LAN stop-and-wait is enough; the window only matters when a is large.',
-      es: 'LAN de 100 m: a ≈ 0.0006, así que U = 1 / (1 + 2a) ≈ 1. En una LAN basta con parada y espera; la ventana solo importa cuando a es grande.',
     },
   },
   {
