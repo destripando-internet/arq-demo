@@ -57,7 +57,8 @@ const TEXTS = {
     'split.title': 'Drag, or use ← and →, to change the width of the columns; double-click to restore it',
     'demo.modified': 'You have changed the scenario of this demo.',
     'demo.restore': 'Restore',
-    'demo.close': 'Close the explanation of the demo',
+    'demo.close': 'Hide the explanation of the demo',
+    'demo.open': 'Show the explanation of the demo',
     'no.data': 'No data',
 
     'proto.saw': 'Stop-and-wait',
@@ -246,7 +247,8 @@ const TEXTS = {
     'split.title': 'Arrastra, o usa ← y →, para cambiar el ancho de las columnas; doble clic para restablecerlo',
     'demo.modified': 'Has cambiado el escenario de esta demo.',
     'demo.restore': 'Restablecer',
-    'demo.close': 'Cerrar la explicación de la demo',
+    'demo.close': 'Ocultar la explicación de la demo',
+    'demo.open': 'Mostrar la explicación de la demo',
     'no.data': 'Sin dato',
 
     'proto.saw': 'Parada y espera',

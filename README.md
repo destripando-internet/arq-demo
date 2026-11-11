@@ -28,7 +28,8 @@ from one of the [demos](#demos).
 - Link presets: the book's figures (a = 1), a 100 m LAN, 1000 km of fibre
   and a geostationary satellite (times in ms). Long waits are drawn
   compressed.
-- After changing a demo, «Restore», in its box, loads it again.
+- After changing a demo, «Restore», in its box, loads it again. Closing
+  the box folds it into a line with the demo's name, which opens it again.
 - The app opens on the «Demos» view, the list of [demos](#demos) by
   section; choosing one loads it in the «Simulation» view.
 - «Help» explains the legend, the constraints, the utilisation and the

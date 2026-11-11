@@ -54,7 +54,8 @@ new ResizeObserver(() => tape.scale(svg.clientWidth / +svg.getAttribute('width')
 
 let protocol, trace, times, analysis, scale;
 let losses = new Map();  // key → true (lose) / false (deliver)
-let demo = null;         // demo loaded with ?demo=ID, while its box is open
+let demo = null;         // demo loaded with ?demo=ID
+let demoOpen = true;     // its explanation shown; folded, a line with its name
 let demoKey = '';        // its scenario, to tell whether it was changed
 let demoValues = {};     // its value of each field, to mark the ones changed
 // At rest, before anything happens: t = 0 already shows data 0 leaving.
@@ -187,30 +188,39 @@ function scheduleNotice() {
   }, 2000);
 }
 
-function renderDemo() {
+// Closing the explanation folds it into a line with the demo's name, which
+// opens it again (a disclosure button); the demo stays loaded.
+function renderDemo(focus = null) {
   demoBox.hidden = !demo;
   if (!demo) return;
-  const focused = demoBox.contains(document.activeElement) ? document.activeElement.dataset.demo : null;
-  demoBox.innerHTML = `${icon('info')}
+  focus ??= demoBox.contains(document.activeElement) ? document.activeElement.dataset.demo : null;
+  const name = `${demo.id} · ${demo.title[lang()]}`;
+  const restore = `<button type="button" class="btn btn-sm" data-demo="restore">${icon('undo')} ${t('demo.restore')}</button>`;
+  demoBox.classList.toggle('alert', demoOpen);
+  demoBox.classList.toggle('folded', !demoOpen);
+  demoBox.innerHTML = demoOpen ? `${icon('info')}
     <div class="alert-body">
       <div class="demo-head">
-        <h2>${demo.id} · ${demo.title[lang()]}</h2>
-        <button type="button" class="btn btn-icon btn-text" data-demo="close"
+        <h2>${name}</h2>
+        <button type="button" class="btn btn-icon btn-text" data-demo="close" aria-expanded="true"
           aria-label="${t('demo.close')}" data-tooltip="${t('demo.close')}">${icon('close')}</button>
       </div>
       <p>${demo.text[lang()]}</p>
-      ${demoNotice ? `<p class="demo-changed">${t('demo.modified')}
-        <button type="button" class="btn btn-sm" data-demo="restore">${icon('undo')} ${t('demo.restore')}</button></p>` : ''}
-    </div>`;
-  if (focused) demoBox.querySelector(`[data-demo=${focused}]`)?.focus();
+      ${demoNotice ? `<p class="demo-changed">${t('demo.modified')} ${restore}</p>` : ''}
+    </div>` : `
+    <button type="button" class="btn btn-text btn-sm demo-line" data-demo="open" aria-expanded="false"
+      data-tooltip="${t('demo.open')}">${icon('info')}<span>${name}</span></button>
+    ${demoNotice ? restore : ''}`;
+  if (focus) demoBox.querySelector(`[data-demo=${focus}]`)?.focus();
 }
 
 demoBox.addEventListener('click', e => {
   const act = e.target.closest('[data-demo]')?.dataset.demo;
   if (!act) return;
-  if (act === 'close') {
-    demo = null;
-    form.querySelector('select, input')?.focus();  // the box goes away: the focus does not get lost
+  if (act === 'close' || act === 'open') {
+    demoOpen = act === 'open';
+    renderDemo(demoOpen ? 'close' : 'open');  // the focus stays on the button that took its place
+    return;
   }
   if (act === 'restore') {
     setPlaying(false);
@@ -739,6 +749,7 @@ function loadDemo(d) {
   demoKey = stateKey();
   demoValues = Object.fromEntries(['p', ...FIELDS].map(name => [name, f[name].value]));
   demoNotice = false;
+  demoOpen = true;  // a demo that is loaded shows its explanation
 }
 
 function readUrl() {

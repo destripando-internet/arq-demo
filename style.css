@@ -304,6 +304,9 @@ fieldset.group legend { padding: 0 var(--space-2); font: var(--type-label-large)
 .demo-head .btn { margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0 0; }
 .demo h2 { margin: 0 0 var(--space-1); font: var(--type-title-large); font-size: 1rem; font-weight: 600; }
 .demo p { margin: 0; }
+/* Folded: one line with the demo's name, which opens it again */
+.demo.folded { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.demo-line { justify-content: flex-start; text-align: left; white-space: normal; padding-inline: var(--space-2); }
 .demo .demo-changed {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2);
   margin-top: var(--space-2); color: var(--color-on-surface-variant); font: var(--type-body-medium);
